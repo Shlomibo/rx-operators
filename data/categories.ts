@@ -131,16 +131,28 @@ export function allCategories(
 function getClicksMerger(
 	clicksSubject: Subject<CategoryName>
 ): [Observable<CategoryDisplay[]>, (catClicks: Observable<CategoryName>) => Observable<CategoryDisplay[]>] {
-	const categoriesState: CategoryDisplay[] = _(categories)
-		.keys()
-		.map((name: CategoryName) => ({
-			name,
-			display: typeInitialization[categories[name].type](name),
-		}))
-		.value();
+	const displayOutOfName = (name: CategoryName) => ({
+		name,
+		display: typeInitialization[categories[name].type](name),
+	}),
+		byTypeFilter = (type: CategoryType) => (name: CategoryName) => categories[name].type === type,
+		categoryNames = _(categories)
+			.keys(),
+		effectCategories = categoryNames.filter(byTypeFilter('effects')),
+		usageCategories = categoryNames.filter(byTypeFilter('usage')),
+		categoriesState = {
+			effects: effectCategories.map(displayOutOfName)
+				.value(),
+			usage: usageCategories.map(displayOutOfName)
+				.value(),
+		};
 
 	const catHandling = clicksSubject.asObservable()
-		.scan(categoryHandling, categoriesState);
+		.scan(categoryHandling, categoriesState)
+		.map(({ effects, usage }) => [
+			...effects,
+			...usage,
+		]);
 
 	return [
 		catHandling,
@@ -153,29 +165,48 @@ function getClicksMerger(
 			});
 		}];
 
-	function categoryHandling(state: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
-		const typeCategoryFilter = ({ name }) => categories[category].type === categories[name].type;
-		const typeCategories = _(state).filter(typeCategoryFilter),
-			filteredCategories = typeCategories.filter(({ name }) => name !== category)
-				.value(),
-			otherCategories = state.filter(cat => !typeCategoryFilter(cat)),
-			isTypeFull = typeCategories.every(({ display }) => display) ||
-				filteredCategories.every(({ display }) => !display);
+	function categoryHandling(
+		{ effects, usage }: Record<CategoryType, CategoryDisplay[]>,
+		category: CategoryName
+	): Record<CategoryType, CategoryDisplay[]> {
+		return {
+			effects: effectsHandling(effects, category),
+			usage: usageHandling(usage, category),
+		};
+	}
+
+	function usageHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
+		if (categories[category].type !== 'usage') {
+			return typeState;
+		}
+
+		// Toggle the clicked category
+		return typeState.map(({ name, display }) => ({
+			name,
+			display: name === category
+			? !display
+			: display
+		}));
+	}
+	function effectsHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
+		if (categories[category].type !== 'effects') {
+			return typeState;
+		}
+
+		const filteredCategories = typeState.filter(({ name }) => name !== category),
+		isTypeFull = typeState.every(({ display }) => display) ||
+		filteredCategories.every(({ display }) => !display);
 
 		// If the category-type isn't full, return state, with the selected category-display flipped
 		return !isTypeFull
-			? state.map(({ name, display }) => name !== category
+			? typeState.map(({ name, display }) => name !== category
 				? { name, display }
 				: { name, display: !display }
 			)
 			// Otherwise, the whole category type is non-displayed except of the selected category
-			: [
-				...otherCategories,
-				...typeCategories.map(({ name, display }) => ({
-					name,
-					display: name === category || !display
-				}))
-					.value(),
-			];
+			: typeState.map(({ name, display }) => ({
+				name,
+				display: name === category || !display
+			}));
 	}
 }
