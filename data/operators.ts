@@ -37,9 +37,9 @@ export function Operator(
 	const opCategories = new Set(data.categories);
 	const ui = $(`<li id="${ name }" class="operator panel panel-default">
 		<div class="panel-heading">${name}</div>
-		<div class="container panel-body">
-		<ul class="categories  col-sm-4"></ul>
-			<div class="operator-desc col-sm-8">
+		<div class="container-fluid panel-body">
+		<ul class="categories  col-sm-4 col-md-3 col-lg-2"></ul>
+			<div class="operator-desc col-sm-8 col-md-9 col-lg-10">
 			</div>
 		</div>
 	</li>`);
