@@ -8,6 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import '../img';
 import { categories as catDefinition, CategoryDisplay, CategoryName } from './categories';
 import { combinationOperators } from './combination';
+import { creationOperators } from './creation';
 import { errorHandlingOperators } from './error-handling';
 import { filteringOperators } from './filtering';
 import { multicastOperators } from './multicast';
@@ -26,6 +27,7 @@ export const operators = {
 	...filteringOperators,
 	...multicastOperators,
 	...transformationOperators,
+	...creationOperators,
 };
 
 export function Operator(
@@ -36,7 +38,7 @@ export function Operator(
 	const CAT_HIDDEN = 'cat-hidden';
 	const opCategories = new Set(data.categories);
 	const ui = $(`<li id="${ name }" class="operator panel panel-default">
-		<div class="panel-heading">${name}</div>
+		<div class="panel-heading">${ name }</div>
 		<div class="container-fluid panel-body">
 		<ul class="categories  col-sm-4 col-md-3 col-lg-2"></ul>
 			<div class="operator-desc col-sm-8 col-md-9 col-lg-10">

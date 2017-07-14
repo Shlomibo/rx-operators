@@ -18,7 +18,8 @@ export type CategoryName = 'data' |
 	'combination' |
 	'filter' |
 	'multicast' |
-	'transformation';
+	'transformation' |
+	'creation';
 export type CategoryType = 'effects' | 'usage';
 
 export interface CategoryData {
@@ -30,7 +31,7 @@ export interface CategoryDisplay {
 	display: boolean;
 }
 
-export const categories: Record<CategoryName, CategoryData> = {
+export const categories = <Record<CategoryName, CategoryData>>_({
 	data: {
 		type: 'effects',
 		description: 'Do you want to change what is emitted?',
@@ -67,7 +68,19 @@ export const categories: Record<CategoryName, CategoryData> = {
 		type: 'usage',
 		description: 'Operators that transforms an observable',
 	},
-};
+	creation: {
+		type: 'effects',
+		description: 'Creates observables from common structures and patterns, values or thin air.'
+	}
+})
+	.toPairs<CategoryData>()
+	.orderBy([
+		([, { type }]) => type,
+	])
+	.reduce((categories, [name, data]) => {
+		categories[name] = data;
+		return categories;
+	}, <Partial<Record<CategoryName, CategoryData>>>{ });
 
 const typeInitialization: Record<CategoryType, (cat: CategoryName) => boolean> = {
 	effects: cat => true,
@@ -110,10 +123,7 @@ export function allCategories(
 
 	const categoryCreation = Observable.from(
 		_(categories)
-			.toPairs<CategoryData>()
-			.orderBy([
-				([, { type }]) => type,
-			])
+			.toPairs()
 			.map(([name, data]: [CategoryName, CategoryData]) => ({ name, data }))
 			.value()
 	)

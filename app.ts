@@ -5,6 +5,7 @@ import 'rxjs/add/observable/from';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/concat';
 import 'rxjs/add/operator/concatMap';
+import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/groupBy';
 import 'rxjs/add/operator/mapTo';
@@ -23,6 +24,18 @@ const ready = Observable.fromEvent(document, 'DOMContentLoaded')
 	.shareReplay();
 
 const handling = ready.mergeMap(() => {
+	const [scrolled, atTop] = Observable.fromEvent(window, 'scroll')
+		.map(() => $(document).scrollTop() > 50)
+		.debounceTime(100)
+		.distinctUntilChanged()
+		.share()
+		.partition(isScrolled => isScrolled);
+
+	const navShrinkHandling = scrolled.map(() => () => $('.navbar').addClass('shrink'))
+		.merge(
+		atTop.map(() => () => $('.navbar').removeClass('shrink'))
+		);
+
 	const $categories = $('.categories'),
 		$operators = $('.operators');
 
@@ -33,7 +46,10 @@ const handling = ready.mergeMap(() => {
 
 	const operatorsUI = allOperators($operators, handling);
 
-	return categoryUI.merge(operatorsUI);
+	return navShrinkHandling.merge(
+		categoryUI,
+		operatorsUI
+	);
 })
 	.catch((err, source) => {
 		console.error("WE'RE DOOMED!!!", err);

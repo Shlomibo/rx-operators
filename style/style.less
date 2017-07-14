@@ -1,3 +1,7 @@
+body {
+	padding-top: 115px;
+}
+
 .categories,
 .operators {
 	list-style: none;
@@ -151,5 +155,17 @@
 	&.cat-inactive {
 		background-color: tint(@transformation, 85%);
 		border-color: tint(@transformation-border, 80%);
+	}
+}
+
+@creation: #f2ff00;
+@creation-border: shade(@creation, 75%);
+.cat-creation {
+	background-color: @creation;
+	border-color: @creation-border;
+
+	&.cat-inactive {
+		background-color: tint(@creation, 85%);
+		border-color: tint(@creation-border, 80%);
 	}
 }
