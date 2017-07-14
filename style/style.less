@@ -1,0 +1,155 @@
+.categories,
+.operators {
+	list-style: none;
+	margin: auto;
+	width: 83%;
+	padding: 0;
+}
+
+.category {
+	border: 1.5px solid;
+	height: 30px;
+	width: 125px;
+	margin: 4px;
+	display: inline-block;
+}
+
+.operator {
+	.categories {
+		width: 185px;
+		margin: 0;
+
+		.category {
+			width: 25px;
+			height: 25px;
+			margin: 2px;
+		}
+	}
+
+	.operator-desc {
+		img {
+			max-width: 100%;
+		}
+	}
+}
+
+.cat-hidden {
+	display: none;
+}
+
+@data: #ff7a7a;
+@data-border: shade(@data, 50%);
+.cat-data {
+	background-color: @data;
+	border-color: @data-border;
+
+	&.cat-inactive {
+		background-color: tint(@data, 75%);
+		border-color: tint(@data-border, 75%);
+	}
+}
+
+@time: #3d9ff4;
+@time-border: shade(@time, 50%);
+.cat-time {
+	background-color: @time;
+	border-color: @time-border;
+
+	&.cat-inactive {
+		background-color: tint(@time, 75%);
+		border-color: tint(@time-border, 75%);
+	}
+}
+
+@error: red;
+@error-border: black;
+.cat-error {
+	background-color: @error;
+	border-color: @error-border;
+
+	&.cat-inactive {
+		background-color: tint(@error, 75%);
+		border-color: tint(@error-border, 75%);
+	}
+}
+
+@completion: #00ff19;
+@completion-border: shade(@completion, 80%);
+.cat-completion {
+	background-color: @completion;
+	border-color: @completion-border;
+
+	&.cat-inactive {
+		background-color: tint(@completion, 75%);
+		border-color: tint(@completion-border, 75%);
+	}
+}
+
+@filter: #ffa100;
+@filter-border: shade(@filter, 80%);
+.cat-filter {
+	background-color: @filter;
+	border-color: @filter-border;
+
+	&.cat-inactive {
+		background-color: tint(@filter, 75%);
+		border-color: tint(@filter-border, 75%);
+	}
+}
+
+@subscription: gray;
+@subscription-border: black;
+.cat-subscription {
+	background-color: @subscription;
+	border-color: @subscription-border;
+
+	&.cat-inactive {
+		background-color: tint(@subscription, 75%);
+		border-color: tint(@subscription-border, 75%);
+	}
+}
+
+@combination: #a757ff;
+@combination-border: shade(@combination, 50%);
+.cat-combination {
+	background-color: @combination;
+	border-color: @combination-border;
+
+	&.cat-inactive {
+		background-color: tint(@combination, 75%);
+		border-color: tint(@combination-border, 75%);
+	}
+}
+
+@multicast:#990000;
+@multicast-border: shade(@multicast, 50%);
+.cat-multicast {
+	background-color: @multicast;
+	border-color: @multicast-border;
+	color: white;
+
+	&.cat-inactive {
+		background-color: tint(@multicast, 75%);
+		border-color: tint(@multicast-border, 75%);
+		color: black;
+
+		&:hover {
+			color: black;
+		}
+	}
+	&:hover {
+		color: white;
+	}
+}
+
+@transformation: #fc61ff;
+@transformation-border: shade(@transformation, 75%);
+.cat-transformation {
+	background-color: @transformation;
+	border-color: @transformation-border;
+
+	&.cat-inactive {
+		background-color: tint(@transformation, 85%);
+		border-color: tint(@transformation-border, 80%);
+	}
+}

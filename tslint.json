@@ -9,12 +9,32 @@
             "tab"
         ],
         "quotemark": [
+            true,
             "single",
             "avoid-escape"
         ],
         "object-literal-sort-keys": [
             false
-        ]
+        ],
+        "one-variable-per-declaration": [
+            false
+        ],
+        "interface-name": [
+            false
+        ],
+        "arrow-parens": false,
+        "no-angle-bracket-type-assertion": false,
+        "trailing-comma": [
+            false
+        ],
+        "no-shadowed-variable": false,
+        "whitespace": [
+            "check-typecast"
+        ],
+        "no-console": [
+            false
+        ],
+        "no-string-literal": false
     },
     "rulesDirectory": []
 }
