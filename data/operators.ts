@@ -6,6 +6,7 @@ import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/expand';
 import { Observable } from 'rxjs/Observable';
 import '../img';
+import { aggregationOprators } from './aggregation';
 import { categories as catDefinition, CategoryDisplay, CategoryName } from './categories';
 import { combinationOperators } from './combination';
 import { conditionalOperators } from './conditional';
@@ -30,6 +31,7 @@ export const operators = {
 	...transformationOperators,
 	...creationOperators,
 	...conditionalOperators,
+	...aggregationOprators,
 };
 
 export function Operator(

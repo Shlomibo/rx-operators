@@ -181,3 +181,24 @@ body {
 		border-color: tint(@conditional-border, 80%);
 	}
 }
+
+@aggregation: black;
+@aggregation-border: black;
+.cat-aggregation {
+	background-color: @aggregation;
+	border-color: @aggregation-border;
+	color: white;
+
+	&.cat-inactive {
+		background-color: tint(@aggregation, 75%);
+		border-color: tint(@aggregation-border, 50%);
+		color: black;
+
+		&:hover {
+			color: black;
+		}
+	}
+	&:hover {
+		color: white;
+	}
+}

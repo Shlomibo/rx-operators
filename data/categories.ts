@@ -20,7 +20,8 @@ export type CategoryName = 'data' |
 	'multicast' |
 	'transformation' |
 	'creation' |
-	'conditional';
+	'conditional' |
+	'aggregation';
 export type CategoryType = 'effects' | 'usage';
 
 export interface CategoryData {
@@ -68,6 +69,10 @@ export const categories = <Record<CategoryName, CategoryData>>_({
 	transformation: {
 		type: 'usage',
 		description: 'Operators that transforms an observable',
+	},
+	aggregation: {
+		type: 'effects',
+		description: 'Do you want to produce a value from finite observable?'
 	},
 	creation: {
 		type: 'effects',
