@@ -8,6 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import '../img';
 import { categories as catDefinition, CategoryDisplay, CategoryName } from './categories';
 import { combinationOperators } from './combination';
+import { conditionalOperators } from './conditional';
 import { creationOperators } from './creation';
 import { errorHandlingOperators } from './error-handling';
 import { filteringOperators } from './filtering';
@@ -28,6 +29,7 @@ export const operators = {
 	...multicastOperators,
 	...transformationOperators,
 	...creationOperators,
+	...conditionalOperators,
 };
 
 export function Operator(
@@ -40,8 +42,8 @@ export function Operator(
 	const ui = $(`<li id="${ name }" class="operator panel panel-default">
 		<div class="panel-heading">${ name }</div>
 		<div class="container-fluid panel-body">
-		<ul class="categories  col-sm-4 col-md-3 col-lg-2"></ul>
-			<div class="operator-desc col-sm-8 col-md-9 col-lg-10">
+		<ul class="categories  col-sm-4 col-md-8 col-lg-3"></ul>
+			<div class="operator-desc col-sm-8 col-md-8 col-lg-9">
 			</div>
 		</div>
 	</li>`);

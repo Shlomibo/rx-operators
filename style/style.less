@@ -20,7 +20,7 @@ body {
 
 .operator {
 	.categories {
-		width: 185px;
+		width: 202px;
 		margin: 0;
 
 		.category {
@@ -167,5 +167,17 @@ body {
 	&.cat-inactive {
 		background-color: tint(@creation, 85%);
 		border-color: tint(@creation-border, 80%);
+	}
+}
+
+@conditional: #14f2e0;
+@conditional-border: shade(@conditional, 75%);
+.cat-conditional {
+	background-color: @conditional;
+	border-color: @conditional-border;
+
+	&.cat-inactive {
+		background-color: tint(@conditional, 85%);
+		border-color: tint(@conditional-border, 80%);
 	}
 }
