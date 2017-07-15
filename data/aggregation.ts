@@ -64,5 +64,14 @@ the *output Observable*.
 Note that \`reduce\` will only emit one value, only when the *source Observable* completes.  \
 
 It is equivalent to applying operator scan followed by operator last.`
+	},
+
+	toArray: {
+		categories: [
+			'aggregation',
+			'data',
+		],
+		description: `Returns an observable that once *source observable* is completed, would return
+an array with all emitted \`next\` data items.`
 	}
 };

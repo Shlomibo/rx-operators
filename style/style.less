@@ -190,8 +190,8 @@ body {
 	color: white;
 
 	&.cat-inactive {
-		background-color: tint(@aggregation, 75%);
-		border-color: tint(@aggregation-border, 50%);
+		background-color: tint(@aggregation, 85%);
+		border-color: tint(@aggregation-border, 75%);
 		color: black;
 
 		&:hover {
@@ -200,5 +200,22 @@ body {
 	}
 	&:hover {
 		color: white;
+	}
+}
+
+@utility: lightgray;
+@utility-border: gray;
+.cat-utility, .cat-debug {
+	background-color: @utility;
+	border-color: @utility-border;
+
+	&.cat-inactive {
+		background-color: white;
+		border-color: lightgray;
+		color: gray;
+
+		&:hover {
+			color: gray;
+		}
 	}
 }

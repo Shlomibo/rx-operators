@@ -21,7 +21,9 @@ export type CategoryName = 'data' |
 	'transformation' |
 	'creation' |
 	'conditional' |
-	'aggregation';
+	'aggregation' |
+	'utility' |
+	'debug';
 export type CategoryType = 'effects' | 'usage';
 
 export interface CategoryData {
@@ -78,9 +80,17 @@ export const categories = <Record<CategoryName, CategoryData>>_({
 		type: 'effects',
 		description: 'Creates observables from common structures and patterns, values or thin air.'
 	},
+	debug: {
+		type: 'effects',
+		description: 'Looking for something usefull to debug?'
+	},
 	conditional: {
 		type: 'usage',
 		description: 'Conditional and boolean operators'
+	},
+	utility: {
+		type: 'usage',
+		description: 'Utility operators.'
 	}
 })
 	.toPairs<CategoryData>()

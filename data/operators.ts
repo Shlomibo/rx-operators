@@ -15,6 +15,7 @@ import { errorHandlingOperators } from './error-handling';
 import { filteringOperators } from './filtering';
 import { multicastOperators } from './multicast';
 import { transformationOperators } from './transformation';
+import { utilityOperators } from './utility';
 
 export interface OperatorData {
 	categories: CategoryName[];
@@ -32,6 +33,7 @@ export const operators = {
 	...creationOperators,
 	...conditionalOperators,
 	...aggregationOprators,
+	...utilityOperators,
 };
 
 export function Operator(
