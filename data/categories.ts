@@ -158,6 +158,9 @@ export function allCategories(
 	];
 }
 
+type CategoryState = Record<CategoryType, CategoryDisplay[]> & {
+	active: CategoryType,
+};
 function getClicksMerger(
 	clicksSubject: Subject<CategoryName>
 ): [Observable<CategoryDisplay[]>, (catClicks: Observable<CategoryName>) => Observable<CategoryDisplay[]>] {
@@ -170,18 +173,23 @@ function getClicksMerger(
 			.keys(),
 		effectCategories = categoryNames.filter(byTypeFilter('effects')),
 		usageCategories = categoryNames.filter(byTypeFilter('usage')),
-		categoriesState = {
+		categoriesState: CategoryState = {
 			effects: effectCategories.map(displayOutOfName)
 				.value(),
 			usage: usageCategories.map(displayOutOfName)
 				.value(),
+			active: 'effects',
 		};
 
 	const catHandling = clicksSubject.asObservable()
 		.scan(categoryHandling, categoriesState)
-		.map(({ effects, usage }) => [
-			...effects,
-			...usage,
+		.map(({ effects, usage, active }) => [
+			...active === 'effects'
+				? effects
+				: effects.map(({ name }) => ({ name, display: false })),
+			...active === 'usage'
+				? usage
+				: usage.map(({ name }) => ({ name, display: false })),
 		]);
 
 	return [
@@ -196,33 +204,17 @@ function getClicksMerger(
 		}];
 
 	function categoryHandling(
-		{ effects, usage }: Record<CategoryType, CategoryDisplay[]>,
+		{ effects, usage }: CategoryState,
 		category: CategoryName
-	): Record<CategoryType, CategoryDisplay[]> {
+	): CategoryState {
 		return {
-			effects: effectsHandling(effects, category),
-			usage: usageHandling(usage, category),
+			effects: typeHandling(effects, category),
+			usage: typeHandling(usage, category),
+			active: categories[category].type,
 		};
 	}
 
-	function usageHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
-		if (categories[category].type !== 'usage') {
-			return typeState;
-		}
-
-		// Toggle the clicked category
-		return typeState.map(({ name, display }) => ({
-			name,
-			display: name === category
-			? !display
-			: display
-		}));
-	}
-	function effectsHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
-		if (categories[category].type !== 'effects') {
-			return typeState;
-		}
-
+	function typeHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
 		const filteredCategories = typeState.filter(({ name }) => name !== category),
 		isTypeFull = typeState.every(({ display }) => display) ||
 		filteredCategories.every(({ display }) => !display);

@@ -40,6 +40,7 @@ export function Operator(
 	name: string,
 	data: OperatorData,
 	categoryDisplay: Observable<CategoryDisplay[]>,
+	search: Observable<string>
 ) {
 	const CAT_HIDDEN = 'cat-hidden';
 	const opCategories = new Set(data.categories);
@@ -66,6 +67,14 @@ export function Operator(
 			.prepend(html),
 	);
 
+	const [viewBySearch, filterBySearch] = search.map(search => search.toLowerCase())
+		.share()
+		.partition(search => name.toLowerCase()
+			.startsWith(search)
+	);
+	const searchHandling = viewBySearch.map(() => () => ui.removeClass('hidden'))
+		.merge(filterBySearch.map(() => () => ui.addClass('hidden')));
+
 	const [opDisplayed, opHidden] = categoryDisplay.map(catDisplay =>
 		_(catDisplay).filter(({ display }) => display)
 			.some(({ name }) => data.categories.includes(name))
@@ -74,9 +83,9 @@ export function Operator(
 		.share()
 		.partition(isDisplayed => isDisplayed);
 
-	const uiHandling = opDisplayed.map(() => () => ui.removeClass(CAT_HIDDEN))
-		.merge(
-		opHidden.map(() => () => ui.addClass(CAT_HIDDEN)),
+	const uiHandling = searchHandling.merge(
+		opDisplayed.map(() => () => ui.removeClass(CAT_HIDDEN)),
+		opHidden.map(() => () => ui.addClass(CAT_HIDDEN))
 	);
 	return {
 		ui,
@@ -89,7 +98,8 @@ export function Operator(
 
 export function allOperators(
 	root: JQuery<HTMLElement>,
-	categoryDisplay: Observable<CategoryDisplay[]>
+	categoryDisplay: Observable<CategoryDisplay[]>,
+	search: Observable<string>
 ): Observable<() => void> {
 	const operatorsData = Observable.from(
 		_(operators)
@@ -101,7 +111,7 @@ export function allOperators(
 		.share();
 
 	return operatorsData.mergeMap(({ name, data }) => {
-		const { ui, uiChanges } = Operator(name, data, categoryDisplay);
+		const { ui, uiChanges } = Operator(name, data, categoryDisplay, search);
 		return Observable.of(() => root.append(ui))
 			.concat(uiChanges);
 	});

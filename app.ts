@@ -32,9 +32,11 @@ const handling = ready.mergeMap(() => {
 		.partition(isScrolled => isScrolled);
 
 	const navShrinkHandling = scrolled.map(() => () => $('.navbar').addClass('shrink'))
-		.merge(
-		atTop.map(() => () => $('.navbar').removeClass('shrink'))
-		);
+		.merge(atTop.map(() => () => $('.navbar').removeClass('shrink')));
+	const $search = $('#search'),
+		search = Observable.fromEvent($search[0], 'input')
+			.debounceTime(500)
+			.map(() => <string>$search.val());
 
 	const $categories = $('.categories'),
 		$operators = $('.operators');
@@ -44,7 +46,7 @@ const handling = ready.mergeMap(() => {
 		categoryUI
 	] = allCategories($categories);
 
-	const operatorsUI = allOperators($operators, handling);
+	const operatorsUI = allOperators($operators, handling, search);
 
 	return navShrinkHandling.merge(
 		categoryUI,
