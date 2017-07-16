@@ -1,6 +1,6 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import * as marky from 'marky-markdown';
+import * as marked from 'marked';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/expand';
@@ -125,5 +125,5 @@ function categoryMarker(category: CategoryName, isActive: boolean) {
 	return catElement;
 }
 function mdToHtml(md: string): Observable<string> {
-	return Observable.of<string>(marky(md));
+	return Observable.of<string>(marked(md));
 }

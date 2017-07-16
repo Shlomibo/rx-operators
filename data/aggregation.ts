@@ -10,16 +10,16 @@ export const aggregationOprators: Record<string, OperatorData> = {
 		img: 'count.png',
 		description: `Counts the number of emissions on the source and emits that number when the source completes.
 
-		\`count\` transforms an Observable that emits values into an Observable that emits a single value
-		that represents the number of values emitted by the **source Observable**.  \
+\`count\` transforms an Observable that emits values into an Observable that emits a single value
+that represents the number of values emitted by the **source Observable**.  \
 
-		If the *source Observable* terminates with an error, \`count\` will pass this error notification along without
-		emitting a value first.  \
+If the *source Observable* terminates with an error, \`count\` will pass this error notification along without
+emitting a value first.  \
 
-		If the *source Observable* does not terminate at all, \`count\` will neither emit a value nor terminate.
+If the *source Observable* does not terminate at all, \`count\` will neither emit a value nor terminate.
 
-		This operator takes an optional \`predicate\` function as argument, in which case the output emission will
-		represent the number of *source values* that matched \`true\` with the \`predicate\`.`
+This operator takes an optional \`predicate\` function as argument, in which case the output emission will
+represent the number of *source values* that matched \`true\` with the \`predicate\`.`
 	},
 
 	max: {
