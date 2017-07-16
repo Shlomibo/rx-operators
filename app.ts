@@ -25,7 +25,7 @@ const ready = Observable.fromEvent(document, 'DOMContentLoaded')
 
 const handling = ready.mergeMap(() => {
 	const [scrolled, atTop] = Observable.fromEvent(window, 'scroll')
-		.map(() => $(document).scrollTop() > 50)
+		.map(() => $(document).scrollTop()! > 50)
 		.debounceTime(100)
 		.distinctUntilChanged()
 		.share()
