@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack -d --progress",
     "watch": "npm run build -- --watch",
-    "release": "npm run build -- --optimize-minimize"
+    "release": "webpack -p --progress --optimize-minimize"
   },
   "author": "Shlomi Borovitz",
   "license": "ISC",
@@ -29,6 +29,7 @@
     "ts-loader": "^2.3.0",
     "ts-node": "^3.2.0",
     "typescript": "^2.4.1",
+    "uglifyjs-webpack-plugin": "^0.4.6",
     "url-loader": "^0.5.9",
     "webpack": "^3.3.0"
   },
