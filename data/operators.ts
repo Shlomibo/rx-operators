@@ -39,7 +39,7 @@ export const operators = {
 export function Operator(
 	name: string,
 	data: OperatorData,
-	categoryDisplay: Observable<CategoryDisplay[]>,
+	categoryDisplay: Observable<(categories: CategoryName[]) => boolean>,
 	search: Observable<string>
 ) {
 	const CAT_HIDDEN = 'cat-hidden';
@@ -75,10 +75,7 @@ export function Operator(
 	const searchHandling = viewBySearch.map(() => () => ui.removeClass('hidden'))
 		.merge(filterBySearch.map(() => () => ui.addClass('hidden')));
 
-	const [opDisplayed, opHidden] = categoryDisplay.map(catDisplay =>
-		_(catDisplay).filter(({ display }) => display)
-			.some(({ name }) => data.categories.includes(name))
-	)
+	const [opDisplayed, opHidden] = categoryDisplay.map(shouldDisplay => shouldDisplay(data.categories))
 		.distinctUntilChanged()
 		.share()
 		.partition(isDisplayed => isDisplayed);
@@ -98,7 +95,7 @@ export function Operator(
 
 export function allOperators(
 	root: JQuery<HTMLElement>,
-	categoryDisplay: Observable<CategoryDisplay[]>,
+	categoryDisplay: Observable<(categories: CategoryName[]) => boolean>,
 	search: Observable<string>
 ): Observable<() => void> {
 	const operatorsData = Observable.from(

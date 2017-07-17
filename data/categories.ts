@@ -102,14 +102,27 @@ export const categories = <Record<CategoryName, CategoryData>>_({
 		return categories;
 	}, <Partial<Record<CategoryName, CategoryData>>>{ });
 
+const EFFECTS_CATEGORIES_COUNT = _(categories)
+	.toPairs()
+	.filter(([, data]: [string, CategoryData]) => data.type === 'effects')
+	.value()
+	.length;
 const typeInitialization: Record<CategoryType, (cat: CategoryName) => boolean> = {
 	effects: cat => true,
 	usage: cat => false,
 };
+type DisplaySelection = (categories: CategoryName[]) => boolean;
+const typeOperatorSelection: Record<CategoryType, (selected: CategoryName[]) => DisplaySelection> = {
+	usage: selected => opCategories => _(opCategories)
+		.filter(category => categories[category].type === 'usage')
+		.some(opCategory => selected.includes(opCategory)),
+	effects: selected => opCategories => selected.length === EFFECTS_CATEGORIES_COUNT ||
+		selected.every(selectedCat => opCategories.includes(selectedCat)),
+};
 export function Category(
 	name: CategoryName,
 	data: CategoryData,
-	activationFn: (clicks: Observable<CategoryName>) => Observable<CategoryDisplay[]>) {
+	activationFn: (clicks: Observable<CategoryName>) => Observable<CategoryName[]>) {
 	const CLS_INACTIVE = 'cat-inactive';
 
 	const inactivation = typeInitialization[data.type](name) ? '' : CLS_INACTIVE;
@@ -118,10 +131,7 @@ export function Category(
 		click = Observable.fromEvent(ui[0], 'click'),
 		activation = activationFn(click.mapTo(name));
 
-	const [activate, deactivate] = activation.map(display =>
-		display.find(({ name: catName }) => name === catName)
-	)
-		.pluck<CategoryDisplay | undefined, boolean>('display')
+	const [activate, deactivate] = activation.map(activated => activated.includes(name))
 		.distinctUntilChanged()
 		.share()
 		.partition(isActive => isActive);
@@ -137,7 +147,7 @@ export function Category(
 }
 export function allCategories(
 	root: JQuery<HTMLElement>
-): [Observable<CategoryDisplay[]>, Observable<() => void>] {
+): [Observable<DisplaySelection>, Observable<() => void>] {
 	const clicksSubject = new Subject<CategoryName>(),
 		[categoryHandling, mergeClicks] = getClicksMerger(clicksSubject);
 
@@ -163,7 +173,10 @@ type CategoryState = Record<CategoryType, CategoryDisplay[]> & {
 };
 function getClicksMerger(
 	clicksSubject: Subject<CategoryName>
-): [Observable<CategoryDisplay[]>, (catClicks: Observable<CategoryName>) => Observable<CategoryDisplay[]>] {
+): [
+		Observable<DisplaySelection>,
+		(catClicks: Observable<CategoryName>) => Observable<CategoryName[]>
+] {
 	const displayOutOfName = (name: CategoryName) => ({
 		name,
 		display: typeInitialization[categories[name].type](name),
@@ -183,20 +196,26 @@ function getClicksMerger(
 
 	const catHandling = clicksSubject.asObservable()
 		.scan(categoryHandling, categoriesState)
-		.map(({ effects, usage, active }) => [
-			...active === 'effects'
-				? effects
-				: effects.map(({ name }) => ({ name, display: false })),
-			...active === 'usage'
-				? usage
-				: usage.map(({ name }) => ({ name, display: false })),
-		]);
+		.map(({ active, ...categories }) => {
+			const typeCategories = categories[active];
+			const selectedCategories = _(typeCategories)
+					.filter(({ display }) => display)
+					.map(({ name }) => name)
+					.value();
+
+			return {
+				selectedCategories,
+				active,
+			};
+		});
 
 	return [
-		catHandling,
-		function mergeClicks(clicks: Observable<CategoryName>): Observable<CategoryDisplay[]> {
-			return Observable.create((observer: Observer<CategoryDisplay[]>) => {
-				const subscription = catHandling.subscribe(observer)
+		catHandling.map(({selectedCategories, active}) => typeOperatorSelection[active](selectedCategories)),
+
+		function mergeClicks(clicks: Observable<CategoryName>): Observable<CategoryName[]> {
+			return Observable.create((observer: Observer<CategoryName[]>) => {
+				const subscription = catHandling.pluck<{}, CategoryName[]>('selectedCategories')
+					.subscribe(observer)
 					.add(clicks.subscribe(clicksSubject));
 
 				return subscription;
@@ -207,17 +226,22 @@ function getClicksMerger(
 		{ effects, usage }: CategoryState,
 		category: CategoryName
 	): CategoryState {
+		const activeType = categories[category].type;
 		return {
-			effects: typeHandling(effects, category),
-			usage: typeHandling(usage, category),
-			active: categories[category].type,
+			effects: activeType !== 'effects'
+				? effects
+				: typeHandling(effects, category),
+			usage: activeType !== 'usage'
+				? usage
+				: typeHandling(usage, category),
+			active: activeType,
 		};
 	}
 
 	function typeHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
 		const filteredCategories = typeState.filter(({ name }) => name !== category),
-		isTypeFull = typeState.every(({ display }) => display) ||
-		filteredCategories.every(({ display }) => !display);
+			isTypeFull = typeState.every(({ display }) => display) ||
+				filteredCategories.every(({ display }) => !display);
 
 		// If the category-type isn't full, return state, with the selected category-display flipped
 		return !isTypeFull
