@@ -210,7 +210,7 @@ function getClicksMerger(
 		});
 
 	return [
-		catHandling.map(({selectedCategories, active}) => typeOperatorSelection[active](selectedCategories)),
+		catHandling.map(({ selectedCategories, active }) => typeOperatorSelection[active](selectedCategories)),
 
 		function mergeClicks(clicks: Observable<CategoryName>): Observable<CategoryName[]> {
 			return Observable.create((observer: Observer<CategoryName[]>) => {
