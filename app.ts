@@ -20,10 +20,13 @@ import { allCategories } from './data/categories';
 import { allOperators } from './data/operators';
 import './style/style.less';
 
+// Shared replaying document-ready stream
 const ready = Observable.fromEvent(document, 'DOMContentLoaded')
 	.shareReplay();
 
+// UI handling stream
 const handling = ready.mergeMap(() => {
+	// Streams to notify when the page is page is scrolled/at the top
 	const [scrolled, atTop] = Observable.fromEvent(window, 'scroll')
 		.map(() => $(document).scrollTop()! > 50)
 		.debounceTime(100)
@@ -31,9 +34,12 @@ const handling = ready.mergeMap(() => {
 		.share()
 		.partition(isScrolled => isScrolled);
 
+	// Stream that shrinks the categories navbar when the page is scrolled
 	const navShrinkHandling = scrolled.map(() => () => $('.navbar').addClass('shrink'))
 		.merge(atTop.map(() => () => $('.navbar').removeClass('shrink')));
+
 	const $search = $('#search'),
+		// Searches stream
 		search = Observable.fromEvent($search[0], 'input')
 			.debounceTime(500)
 			.map(() => <string>$search.val());
@@ -42,18 +48,23 @@ const handling = ready.mergeMap(() => {
 		$operators = $('.operators');
 
 	const [
-		handling,
-		categoryUI
+		// Categories' state handling stream
+		categoryStateHandling,
+		// Categories UI handling stream
+		categoryUI,
 	] = allCategories($categories);
 
-	const operatorsUI = allOperators($operators, handling, search);
+	// Operators' UI handling
+	const operatorsUI = allOperators($operators, categoryStateHandling, search);
 
+	// Returns a stream of all UI changes
 	return navShrinkHandling.merge(
 		categoryUI,
 		operatorsUI
 	);
 })
 	.catch((err, source) => {
+		// Log the error, then resubscribe
 		console.error("WE'RE DOOMED!!!", err);
 		return source;
 	});
@@ -61,5 +72,5 @@ const handling = ready.mergeMap(() => {
 handling.subscribe({
 	next: changeUI => changeUI(),
 	error: err => console.error('WTF!!!', err),
-	complete: () => console.warn('UI handlingcompleted'),
+	complete: () => console.warn('UI handling died'),
 });

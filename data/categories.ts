@@ -4,8 +4,10 @@ import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/merge';
+import 'rxjs/add/operator/multicast';
 import 'rxjs/add/operator/partition';
 import 'rxjs/add/operator/share';
+import 'rxjs/add/operator/startWith';
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 import { Subject } from 'rxjs/Subject';
@@ -35,6 +37,9 @@ export interface CategoryDisplay {
 	display: boolean;
 }
 
+/**
+ * @var categories All the categories
+ */
 export const categories = <Record<CategoryName, CategoryData>>_({
 	data: {
 		type: 'effects',
@@ -107,11 +112,18 @@ const EFFECTS_CATEGORIES_COUNT = _(categories)
 	.filter(([, data]: [string, CategoryData]) => data.type === 'effects')
 	.value()
 	.length;
+/**
+ * @var typeInitialization Category initialization by category-type
+ */
 const typeInitialization: Record<CategoryType, (cat: CategoryName) => boolean> = {
 	effects: cat => true,
 	usage: cat => false,
 };
 type DisplaySelection = (categories: CategoryName[]) => boolean;
+/**
+ * @var typeOperatorSelection Mappping from category-type to functions, that returns functions to determine
+ *    operator viewability
+ */
 const typeOperatorSelection: Record<CategoryType, (selected: CategoryName[]) => DisplaySelection> = {
 	usage: selected => opCategories => _(opCategories)
 		.filter(category => categories[category].type === 'usage')
@@ -119,74 +131,121 @@ const typeOperatorSelection: Record<CategoryType, (selected: CategoryName[]) => 
 	effects: selected => opCategories => selected.length === EFFECTS_CATEGORIES_COUNT ||
 		selected.every(selectedCat => opCategories.includes(selectedCat)),
 };
-export function Category(
-	name: CategoryName,
-	data: CategoryData,
-	activationFn: (clicks: Observable<CategoryName>) => Observable<CategoryName[]>) {
-	const CLS_INACTIVE = 'cat-inactive';
 
-	const inactivation = typeInitialization[data.type](name) ? '' : CLS_INACTIVE;
-	const ui = $(`<li class="category btn cat-${ name } ${ inactivation }"
-					  title="${ data.description }">${ name }</li>`),
-		click = Observable.fromEvent(ui[0], 'click'),
-		activation = activationFn(click.mapTo(name));
-
-	const [activate, deactivate] = activation.map(activated => activated.includes(name))
-		.distinctUntilChanged()
-		.share()
-		.partition(isActive => isActive);
-
-	return {
-		ui,
-		click,
-		uiChanges: activate.map(() => () => ui.removeClass(CLS_INACTIVE))
-			.merge(
-			deactivate.map(() => () => ui.addClass(CLS_INACTIVE)),
-		),
-	};
-}
+/**
+ * Creates stream of functions to determine operators viewability, and UI-changes stream to add and
+ *    update categories UI
+ * @param {JQuery} root Root element that categories should be appended to
+ * @returns {[Observable.<Function>, Observable.<Function>]} A tuple of display-determining functions stream,
+ *    and UI-changes stream.
+ */
 export function allCategories(
 	root: JQuery<HTMLElement>
 ): [Observable<DisplaySelection>, Observable<() => void>] {
+	// Clicks subject, to multicast all category-click from
 	const clicksSubject = new Subject<CategoryName>(),
-		[categoryHandling, mergeClicks] = getClicksMerger(clicksSubject);
+		[operatorsHandling, clickStreamsMerger] = getClicksMerger(clicksSubject);
 
+	// An observable to add categories UI
 	const categoryCreation = Observable.from(
 		_(categories)
 			.toPairs()
 			.map(([name, data]: [CategoryName, CategoryData]) => ({ name, data }))
 			.value()
 	)
-		.map(({ name, data }) => Category(name, data, mergeClicks));
+		.map(({ name, data }) => Category(name, data, clickStreamsMerger));
 
 	return [
-		categoryHandling,
+		// A stream of functions to check if an operator should be viewed
+		operatorsHandling,
+		// A stream to create and update the UI
 		categoryCreation.mergeMap(({ ui, uiChanges }) =>
-			Observable.of(() => root.append(ui))
-				.concat(uiChanges)
+			// UI changes, started by appending categories UI element
+			uiChanges.startWith(() => root.append(ui))
 		),
 	];
+}
+/**
+ * Creates UI-manipulating stream for specific category, and hooks everything needed to it
+ * @param name The name of the category
+ * @param data Category's metata
+ * @param activationByClicks A functions that receives category's clicks stream, and returns a stream
+ *   of currently selected categories
+ * @returns An object with 'ui' property containing the category UI element, and 'uiChanges' property
+ *    containing a UI-changes stream
+ */
+function Category(
+	name: CategoryName,
+	data: CategoryData,
+	activationByClicks: (clicks: Observable<CategoryName>) => Observable<CategoryName[]>
+): {
+	ui: JQuery<HTMLElement>;
+	uiChanges: Observable<() => void>;
+} {
+	const CLS_INACTIVE = 'cat-inactive';
+
+	// Check if the category should be initialized as active
+	const isCategoryActive = typeInitialization[data.type](name),
+	// Set CSS class accordingly
+		inactivation = isCategoryActive ? '' : CLS_INACTIVE;
+
+	// Create the UI element to be added to the DOM
+	const ui = $(`<li class="category btn cat-${ name } ${ inactivation }"
+					  title="${ data.description }">${ name }</li>`),
+		// Get clicks stream from the UI
+		click = Observable.fromEvent(ui[0], 'click'),
+		// And category activation stream from category-clicks
+		activation = activationByClicks(click.mapTo(name));
+
+	// Partition the activation stream according to currently activated categories
+	const [activate, deactivate] = activation.map(activated => activated.includes(name))
+		.distinctUntilChanged()
+		.share()
+		.partition(isActive => isActive);
+
+	return {
+		// The UI element
+		ui,
+		// A stream the append the category UI, and manipulate it
+		uiChanges: activate.map(() => () => ui.removeClass(CLS_INACTIVE))
+			.merge(
+			deactivate.map(() => () => ui.addClass(CLS_INACTIVE)),
+		),
+	};
 }
 
 type CategoryState = Record<CategoryType, CategoryDisplay[]> & {
 	active: CategoryType,
 };
+/**
+ * Based on the supplied subject, creates a stateful display-determination-functions stream, and a function to merge
+ *    a category-stream into that stream
+ * @param clicksSubject The subject to merge category-stream through
+ * @returns A tuple with an Observable that produce functions that check if specific category
+ */
 function getClicksMerger(
 	clicksSubject: Subject<CategoryName>
 ): [
 		Observable<DisplaySelection>,
 		(catClicks: Observable<CategoryName>) => Observable<CategoryName[]>
 ] {
+	// A function that map category-display object, from category-name
 	const displayOutOfName = (name: CategoryName) => ({
 		name,
 		display: typeInitialization[categories[name].type](name),
-	}),
-		byTypeFilter = (type: CategoryType) => (name: CategoryName) => categories[name].type === type,
-		categoryNames = _(categories)
+	});
+
+	// A function to create category-filter (a filtering function) from category-type
+	const byTypeFilter = (type: CategoryType) => (name: CategoryName) => categories[name].type === type;
+
+	// Lodash wrapper to category-names
+	const categoryNames = _(categories)
 			.keys(),
 		effectCategories = categoryNames.filter(byTypeFilter('effects')),
-		usageCategories = categoryNames.filter(byTypeFilter('usage')),
-		categoriesState: CategoryState = {
+		usageCategories = categoryNames.filter(byTypeFilter('usage'));
+
+	// Initial categoy state
+	const categoriesState: CategoryState = {
 			effects: effectCategories.map(displayOutOfName)
 				.value(),
 			usage: usageCategories.map(displayOutOfName)
@@ -194,8 +253,11 @@ function getClicksMerger(
 			active: 'effects',
 		};
 
+	// The category handling stream is created from the multicast subject
 	const catHandling = clicksSubject.asObservable()
+		// Scanned to update categories-state, based on clicked category
 		.scan(categoryHandling, categoriesState)
+		// Mapped to current active-categories, and active category-type
 		.map(({ active, ...categories }) => {
 			const typeCategories = categories[active];
 			const selectedCategories = _(typeCategories)
@@ -210,8 +272,12 @@ function getClicksMerger(
 		});
 
 	return [
-		catHandling.map(({ selectedCategories, active }) => typeOperatorSelection[active](selectedCategories)),
+		// A stream of operator-viewability functions
+		catHandling.map(({ selectedCategories, active: activeType }) =>
+			typeOperatorSelection[activeType](selectedCategories)),
 
+		// A function that creates an observable that multicasts given category-clicks stream,
+		//    and returns currently active categories
 		function mergeClicks(clicks: Observable<CategoryName>): Observable<CategoryName[]> {
 			return Observable.create((observer: Observer<CategoryName[]>) => {
 				const subscription = catHandling.pluck<{}, CategoryName[]>('selectedCategories')
@@ -222,37 +288,66 @@ function getClicksMerger(
 			});
 		}];
 
+	/**
+	 * Categories' state handling
+	 * @param param Current categories' state
+	 * @param category Clicked category
+	 * @returns New categories' state
+	 */
 	function categoryHandling(
 		{ effects, usage }: CategoryState,
 		category: CategoryName
 	): CategoryState {
 		const activeType = categories[category].type;
+
+		switch (activeType) {
+			case 'effects': {
+				effects = typeHandling(effects, category);
+				break;
+			}
+			case 'usage': {
+				usage = typeHandling(usage, category);
+				break;
+			}
+			default: {
+				throw new Error('Unknown category-type');
+			}
+		}
+
 		return {
-			effects: activeType !== 'effects'
-				? effects
-				: typeHandling(effects, category),
-			usage: activeType !== 'usage'
-				? usage
-				: typeHandling(usage, category),
+			effects,
+			usage,
 			active: activeType,
 		};
 	}
 
-	function typeHandling(typeState: CategoryDisplay[], category: CategoryName): CategoryDisplay[] {
-		const filteredCategories = typeState.filter(({ name }) => name !== category),
-			isTypeFull = typeState.every(({ display }) => display) ||
-				filteredCategories.every(({ display }) => !display);
+	/**
+	 * Handles categories of specific type: Smart toggle the clicked category
+	 * @param typeState An array of category-display objects, representing the current state of all categories
+	 *    in a specific category-type
+	 * @param clickedCategory The clicked category
+	 * @returns An array of category-display objects, representing the new state of all categories
+	 *    in a specific category-type
+	 */
+	function typeHandling(typeState: CategoryDisplay[], clickedCategory: CategoryName): CategoryDisplay[] {
+		// All categories excluding the clicked one
+		const filteredCategories = typeState.filter(({ name }) => name !== clickedCategory);
+
+		// Current category type considerred full, if all categories are displayed
+		const isTypeFull = typeState.every(({ display }) => display) ||
+			// or if all categories, but the clicked category, are non-displayed.
+			filteredCategories.every(({ display }) => !display);
 
 		// If the category-type isn't full, return state, with the selected category-display flipped
 		return !isTypeFull
-			? typeState.map(({ name, display }) => name !== category
+			? typeState.map(({ name, display }) => name !== clickedCategory
 				? { name, display }
 				: { name, display: !display }
 			)
-			// Otherwise, the whole category type is non-displayed except of the selected category
+			// Otherwise, the whole category type is flipped, except of the selected category
 			: typeState.map(({ name, display }) => ({
 				name,
-				display: name === category || !display
+				display: name === clickedCategory || !display
 			}));
 	}
 }
