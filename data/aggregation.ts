@@ -8,6 +8,7 @@ export const aggregationOprators: Record<string, OperatorData> = {
 			'filter',
 		],
 		img: 'count.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-count',
 		description: `Counts the number of emissions on the source and emits that number when the source completes.
 
 \`count\` transforms an Observable that emits values into an Observable that emits a single value
@@ -28,6 +29,7 @@ represent the number of *source values* that matched \`true\` with the \`predica
 			'filter',
 		],
 		img: 'max.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-max',
 		description: `The \`max\` operator operates on an Observable that emits numbers
 (or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
 it emits a **single** item: the item with the largest value.`
@@ -39,9 +41,10 @@ it emits a **single** item: the item with the largest value.`
 			'filter',
 		],
 		img: 'min.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-min',
 		description: `The \`min\` operator operates on an Observable that emits numbers
-		(or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
-		it emits a **single** item: the item with the smallest value.`
+(or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
+it emits a **single** item: the item with the smallest value.`
 	},
 
 	reduce: {
@@ -51,6 +54,7 @@ it emits a **single** item: the item with the largest value.`
 			'filter',
 		],
 		img: 'reduce.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-reduce',
 		description: `Applies an accumulator function over the *source Observable*, and returns
 the accumulated result when the *source* **completes**, given an optional seed value.
 
@@ -71,6 +75,7 @@ It is equivalent to applying operator scan followed by operator last.`
 			'aggregation',
 			'data',
 		],
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-toArray',
 		description: `Returns an observable that once *source observable* is completed, would return
 an array with all emitted \`next\` data items.`
 	}

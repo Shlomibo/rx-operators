@@ -1,11 +1,15 @@
 import * as $ from 'jquery';
+
+// Required for bootstrap execution
+window['$'] = window['jQuery'] = $;
+import 'bootstrap/dist/js/npm';
+
 import * as _ from 'lodash';
 import * as marked from 'marked';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/expand';
 import { Observable } from 'rxjs/Observable';
-import '../img';
 import { aggregationOprators } from './aggregation';
 import { categories as catDefinition, CategoryDisplay, CategoryName } from './categories';
 import { combinationOperators } from './combination';
@@ -16,10 +20,12 @@ import { filteringOperators } from './filtering';
 import { multicastOperators } from './multicast';
 import { transformationOperators } from './transformation';
 import { utilityOperators } from './utility';
+import '../img';
 
 export interface OperatorData {
 	categories: CategoryName[];
 	img?: string;
+	url: string;
 	description: string;
 }
 
@@ -86,11 +92,17 @@ function Operator(
 	const opCategories = new Set(data.categories);
 
 	const ui = $(`<li id="${ name }" class="operator panel panel-default">
-		<div class="panel-heading">${ name }</div>
-		<div class="container-fluid panel-body">
-		<ul class="categories  col-sm-4 col-md-8 col-lg-3"></ul>
-			<div class="operator-desc col-sm-8 col-md-8 col-lg-9">
-			</div>
+		<div data-toggle="collapse"
+			 data-target="#${ name } .panel-body"
+			 aria-expanded="false"
+			 class="panel-heading"
+			 >
+			<h3><a href="${ data.url }" target="_blank"><code>${ name }</code></a></h3>
+		</div>
+
+		<div class="container-fluid panel-body collapse">
+			<ul class="categories  col-sm-4 col-md-8 col-lg-3"></ul>
+			<div class="operator-desc col-sm-8 col-md-8 col-lg-9"></div>
 		</div>
 	</li>`);
 

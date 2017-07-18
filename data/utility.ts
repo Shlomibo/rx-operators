@@ -7,6 +7,7 @@ export const utilityOperators: Record<string, OperatorData> = {
 			'debug',
 		],
 		img: 'do.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-do',
 		description: `Intercepts each emission on the source and runs a function, but returns
 an output which is identical to the source.
 
@@ -27,9 +28,11 @@ It is also not clear what would happen on resubscribing such observable, and wou
 			'utility',
 			'data',
 		],
+		img: 'timeInterval.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-timeInterval',
 		description: `Returns an observable that emits for each item emitted from *source observable* an object,
-		where the item emitted from the *source observable* is the \`value\` property, and an \`interval\` property,
-		that contains the time passed since the *previous emission* in *miliseconds*.`
+where the item emitted from the *source observable* is the \`value\` property, and an \`interval\` property,
+that contains the time passed since the *previous emission* in *miliseconds*.`
 	},
 
 	timestamp: {
@@ -37,9 +40,10 @@ It is also not clear what would happen on resubscribing such observable, and wou
 			'utility',
 			'data',
 		],
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-timestamp',
 		description: `Returns an observable that emits for each item emitted from *source observable* an object,
-		where the item emitted from the *source observable* is the \`value\` property, and a \`timestamp\` property,
-		that contains the time passed since [*epoch time*](https://en.wikipedia.org/wiki/Unix_time) in *miliseconds*.`
+where the item emitted from the *source observable* is the \`value\` property, and a \`timestamp\` property,
+that contains the time passed since [*epoch time*](https://en.wikipedia.org/wiki/Unix_time) in *miliseconds*.`
 	},
 
 	timeout: {
@@ -48,6 +52,7 @@ It is also not clear what would happen on resubscribing such observable, and wou
 			'error',
 		],
 		img: 'timeout.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-timeout',
 		description: `Returns an observable that mirror the *source observable*, but emit an \`error\` if
 the \`timeout\` provided is a number, and the *source observabe* does not emit \`next\` for longer than
 \`timeout\` time in miliseconds.
@@ -64,6 +69,7 @@ At which point it would emit an \`error\` (unless it is already completed).`
 			'subscription'
 		],
 		img: 'timeoutWith.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-timeoutWith',
 		description: `Returns an observable that mirror the *source observable*, until a spcified \`timeout\` is
 reached.
 

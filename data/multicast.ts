@@ -7,6 +7,7 @@ export const multicastOperators: Record<string, OperatorData> = {
 			'subscription',
 		],
 		img: 'multicast.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-multicast',
 		description: 'Share source utilizing the provided \`Subject\`.',
 	},
 
@@ -16,6 +17,7 @@ export const multicastOperators: Record<string, OperatorData> = {
 			'subscription',
 		],
 		img: 'publish.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-publish',
 		description: `Returns a \`ConnectableObservable\`, which is a variety of Observable that waits \
 until its \`connect\` method is called before it begins emitting items to those Observers that have \
 subscribed to it.  \
@@ -28,6 +30,7 @@ It's like \`multicast\`, when provided with a simple \`Subject\`.`,
 			'multicast',
 			'subscription',
 		],
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-publishBehavior',
 		description: `Returns a \`ConnectableObservable\`, which is a variety of Observable that waits \
 until its \`connect\` method is called before it begins emitting items to those Observers that have \
 subscribed to it.  \
@@ -44,6 +47,7 @@ The returned-observable, would repeat the last emitted value from the source-obs
 			'filter',
 			'time',
 		],
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-publishLast',
 		description: `Returns a \`ConnectableObservable\`, which is a variety of Observable that waits \
 until its \`connect\` method is called before it begins emitting items to those Observers that have \
 subscribed to it.  \
@@ -61,6 +65,7 @@ from the source-observable once the source-observable completes.`,
 			'data',
 			'time',
 		],
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-publishReplay',
 		description: `Returns a \`ConnectableObservable\`, which is a variety of Observable that waits \
 until its \`connect\` method is called before it begins emitting items to those Observers that have \
 subscribed to it.  \
@@ -76,6 +81,7 @@ The returned-observable, would replay its source-observable emissions every time
 			'subscription',
 		],
 		img: 'share.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-share',
 		description: `Returns a new Observable that multicasts (shares) the original Observable.  \
 
 As long as there is at least one Subscriber this Observable will be subscribed and emitting data.  \

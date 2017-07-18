@@ -7,6 +7,7 @@ export const conditionalOperators: Record<string, OperatorData> = {
 			'data',
 		],
 		img: 'defaultIfEmpty.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-defaultIfEmpty',
 		description: `Emits a given value if the source Observable *completes* without emitting any \`next\`
 value,  \
 
@@ -21,6 +22,7 @@ Otherwise mirrors the source Observable.`
 			'completion',
 		],
 		img: 'every.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-every',
 		description: `Returns an Observable that emits whether or not every item of the source satisfies
 the condition specified.
 
@@ -40,6 +42,7 @@ single \`next\` with \`true\` value before it's complete.`
 			'completion',
 		],
 		img: 'find.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-find',
 		description: `Emits only the first value emitted by the *source Observable* that meets some condition.
 
 \`find\` searches for the first item in the *source Observable* that matches the specified \`predicate\`,
@@ -57,6 +60,7 @@ if a valid value is not found.`
 			'completion',
 		],
 		img: 'findIndex.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-findIndex',
 		description: `Emits only the index of the first value emitted by the *source Observable*
 that meets some condition.
 
@@ -77,6 +81,7 @@ emit an error if a valid value is not found.`
 			'completion',
 		],
 		img: 'isEmpty.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-isEmpty',
 		description: `Returns an observable that emits \`true\` if the *source observable* completes without
 emitting any \`next\`.  \
 

@@ -7,6 +7,7 @@ export const combinationOperators: Record<string, OperatorData> = {
 			'data',
 		],
 		img: 'combineLatest.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-combineLatest',
 		description: `Combines the values from this Observable with values from Observables passed as arguments.  \
 
 This is done by subscribing to each Observable, in order, and collecting an array of each of \
@@ -22,6 +23,7 @@ the most recent values any time any of the input Observables emits.`,
 			'subscription',
 		],
 		img: 'combineAll.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-combineAll',
 		description: `Takes an Observable of Observables, and collects all Observables from it.  \
 
 Once the outer Observable completes, it subscribes to all collected Observables and combines their values \
@@ -35,6 +37,7 @@ using the \`combineLatest\` operator.`,
 			'subscription',
 		],
 		img: 'concat.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-concat',
 		description: `Creates an output Observable which sequentially emits all values from every \
 given input Observable after the current Observable.  \
 
@@ -47,6 +50,7 @@ It concatenates multiple Observables together by sequentially emitting their val
 			'completion',
 		],
 		img: 'concatAll.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-concatAll',
 		description: `Converts a higher-order Observable into a first-order Observable by \
 concatenating the inner Observables in order.  \
 
@@ -61,6 +65,7 @@ It flattens an Observable-of-Observables by putting one inner Observable after t
 			'filter',
 		],
 		img: 'exhaust.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-exhaust',
 		description: `Subscribes to an Observable that emits Observables, also known as a higher-order Observable.  \
 
 Each time it observes one of these emitted inner Observables, the output Observable begins emitting the \
@@ -83,6 +88,7 @@ is still executing.`,
 			'data',
 		],
 		img: 'forkJoin.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-forkJoin',
 		description: 'When all observables complete, emit the last value from each.',
 	},
 
@@ -91,6 +97,7 @@ is still executing.`,
 			'combination',
 		],
 		img: 'merge.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-merge',
 		description: `Subscribes to each given input Observable (either the source or an Observable given as argument),\
  and simply forwards (without doing any transformation) all the values from all the input Observables to \
 the output Observable. The output Observable only completes once all input Observables have completed.  \
@@ -106,6 +113,7 @@ It flattens multiple Observables together by blending their values into one Obse
 			'completion',
 		],
 		img: 'mergeAll.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-mergeAll',
 		description: `Subscribes to an Observable that emits Observables, also known as a higher-order Observable.  \
 
 Each time it observes one of these emitted inner Observables, it subscribes to that and delivers all \
@@ -124,6 +132,7 @@ It flattens an Observable-of-Observables.`,
 			'filter',
 		],
 		img: 'race.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-race',
 		description: 'Returns an Observable that mirrors the first source Observable to emit an item \
 from the combination of this Observable and supplied Observables.',
 	},
@@ -134,6 +143,7 @@ from the combination of this Observable and supplied Observables.',
 			'data',
 		],
 		img: 'startWith.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-startWith',
 		description: 'Returns an Observable that emits the items you specify as arguments before it begins \
 to emit items emitted by the source Observable.',
 	},
@@ -146,6 +156,7 @@ to emit items emitted by the source Observable.',
 			'subscription',
 		],
 		img: 'switch.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-switch',
 		description: `Subscribes to an Observable that emits Observables, also known as a higher-order Observable.  \
 
 Each time it observes one of these emitted inner Observables, the output Observable subscribes to the \
@@ -163,6 +174,7 @@ and begins emitting items from it.`,
 			'filter',
 		],
 		img: 'withLatestFrom.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-withLatestFrom',
 		description: `Combines each value from the source Observable (the instance) with the latest values from \
 the other input Observables only when the source emits a value.  \
 
@@ -176,6 +188,7 @@ All input Observables **must emit** at least one value before the output Observa
 			'time',
 		],
 		img: 'zip.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-zip',
 		description: `After all observables emit a value, emit all these values as an array.  \
 
 Could be used to syncronize the emissions of one observable with the emission of other.`,
@@ -188,6 +201,7 @@ Could be used to syncronize the emissions of one observable with the emission of
 			'time',
 		],
 		img: 'zipAll.png',
+		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-zipAll',
 		description: 'Converts higher order observable into simple observable, \
 merging the emitted observable using zip.',
 	},
