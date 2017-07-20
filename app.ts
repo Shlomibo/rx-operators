@@ -16,8 +16,9 @@ import 'rxjs/add/operator/shareReplay';
 import { Observable } from 'rxjs/Observable';
 import { GroupedObservable } from 'rxjs/operator/groupBy';
 import { Subject } from 'rxjs/Subject';
-import { allCategories } from './data/categories';
-import { allOperators } from './data/operators';
+import { allCategories } from './ui-components/categories';
+import { allOperators } from './ui-components/operators';
+import { createSearch } from './ui-components/search';
 import './style/style.less';
 
 // Shared replaying document-ready stream
@@ -38,27 +39,24 @@ const handling = ready.mergeMap(() => {
 	const navShrinkHandling = scrolled.map(() => () => $('.navbar').addClass('shrink'))
 		.merge(atTop.map(() => () => $('.navbar').removeClass('shrink')));
 
-	const $search = $('#search'),
-		// Searches stream
-		search = Observable.fromEvent($search[0], 'input')
-			.debounceTime(500)
-			.map(() => <string>$search.val());
+	const [searchCreation, search] = createSearch(document.querySelector('.navbar .container>div')!);
 
-	const $categories = $('.categories'),
-		$operators = $('.operators');
+	const categoriesRoot = document.querySelector('.categories')!,
+		operatorsRoot = document.querySelector('main')!;
 
 	const [
 		// Categories' state handling stream
 		categoryStateHandling,
 		// Categories UI handling stream
 		categoryUI,
-	] = allCategories($categories);
+	] = allCategories(categoriesRoot);
 
 	// Operators' UI handling
-	const operatorsUI = allOperators($operators, categoryStateHandling, search);
+	const operatorsUI = allOperators(operatorsRoot, categoryStateHandling, search);
 
 	// Returns a stream of all UI changes
 	return navShrinkHandling.merge(
+		searchCreation,
 		categoryUI,
 		operatorsUI
 	);
