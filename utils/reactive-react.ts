@@ -5,23 +5,36 @@ import { Subscription } from 'rxjs/Subscription';
 
 export type StateUpdate<TState> = Pick<TState, keyof TState>;
 export abstract class RXComponent<TProp = {}, TState = {}> extends React.Component<TProp, TState> {
-	protected _cleanup?: Subscription;
+	private __cleanup?: Subscription;
+	private _observable: Observable<TState>;
 
 	protected subscribe(observable: Observable<StateUpdate<TState>>) {
-		const cleanup = observable.subscribe({
+		this._observable = observable;
+	}
+
+	protected get _cleanup() {
+		return this.__cleanup;
+	}
+	protected set _cleanup(sub: Subscription | undefined) {
+		if (sub) {
+			this.__cleanup = !!this.__cleanup
+				? this.__cleanup.add(sub)
+				: sub;
+		}
+	}
+
+	public componentWillMount() {
+		this._cleanup = this._observable.subscribe({
 			next: state => this.setState(state),
 			error: err => console.error(err),
 			complete: () => console.warn('State stream completed', this),
 		});
-
-		this._cleanup = !!this._cleanup
-			? this._cleanup.add(cleanup)
-			: cleanup;
 	}
 
 	public componentWillUnmount() {
 		if (this._cleanup) {
 			this._cleanup.unsubscribe();
 		}
+		this.__cleanup = undefined;
 	}
 }

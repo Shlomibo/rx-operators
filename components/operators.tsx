@@ -110,21 +110,23 @@ class Operator extends RXComponent<OperatorProps, OperatorState> {
 
 		return (
 			<li id={name} className={`operator panel panel-default ${ catDisplay } ${ display }`}>
-				<div className='panel-heading' onClick={() => this._clicked.next()}>
-					<h3><a href={url} target='_blank' onClick={e => e.stopPropagation()}><code>{name}</code></a></h3>
+				<div className='panel-heading container-fluid' onClick={() => this._clicked.next()}>
+					<div className='col-sm-6 col-lg-5'>
+						<ul className='categories'>{
+							_(categoriesData)
+								.keys()
+								.map((category: CategoryName) =>
+									<CategoryMarker key={category} name={category} isActive={categories.includes(category)} />
+								)
+								.value()
+						}</ul>
+					</div>
+					<h3 className='col-sm-6 col-lg-7'>
+						<a href={url} target='_blank' onClick={e => e.stopPropagation()}><code>{name}</code></a>
+					</h3>
 				</div>
 
-				<div className={`container-fluid panel-body ${ collapsed }`}>
-					<ul className='categories  col-sm-4 col-md-8 col-lg-3'>{
-						_(categoriesData)
-							.keys()
-							.map((category: CategoryName) =>
-								<CategoryMarker key={category} name={category} isActive={categories.includes(category)} />
-							)
-							.value()
-					}</ul>
-					<OperatorDescription className='col-sm-8 col-md-8 col-lg-9' html={description} img={img} />
-				</div>
+				<OperatorDescription className={`panel-body ${ collapsed }`} html={description} img={img} />
 			</li>
 		);
 	}
@@ -145,9 +147,9 @@ interface OperatorDescriptionProperties {
 }
 function OperatorDescription({ html = '', className = '', img }: OperatorDescriptionProperties) {
 	return (
-		<div className={`operator-desc ${ className }`}>
-		<div dangerouslySetInnerHTML={{ __html: html }}></div>
-		{img && <img className='image-rounded' src={`./img/${ img }`} />}
+		<div className={`operator-desc container-fluid ${ className }`}>
+			<div className='col-sm-6' dangerouslySetInnerHTML={{ __html: html }}></div>
+			{img && <img className='col-sm-6 image-rounded' src={`./img/${ img }`} />}
 		</div>
 	);
 }

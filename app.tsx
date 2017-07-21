@@ -20,7 +20,7 @@ const handling = ready.map(() => {
 	return createSideEffect(
 		Observable.hotBindCallback(render),
 		<App />,
-		document.body
+		document.getElementById('app')
 	);
 })
 	.catch((err, source) => {
