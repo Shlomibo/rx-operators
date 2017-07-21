@@ -51,6 +51,9 @@
         ],
         "array-type": [
             false
+        ],
+        "member-ordering": [
+            false
         ]
     },
     "rulesDirectory": []

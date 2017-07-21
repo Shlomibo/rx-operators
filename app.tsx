@@ -1,6 +1,8 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
+import * as React from 'react';
+import { render } from 'react-dom';
 import 'rxjs/add/observable/from';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/concat';
@@ -16,10 +18,11 @@ import 'rxjs/add/operator/shareReplay';
 import { Observable } from 'rxjs/Observable';
 import { GroupedObservable } from 'rxjs/operator/groupBy';
 import { Subject } from 'rxjs/Subject';
+import './style/style.less';
 import { allCategories } from './ui-components/categories';
 import { allOperators } from './ui-components/operators';
-import { createSearch } from './ui-components/search';
-import './style/style.less';
+import { Search } from './ui-components/search';
+import { createSideEffect } from './utils/side-effects';
 
 // Shared replaying document-ready stream
 const ready = Observable.fromEvent(document, 'DOMContentLoaded')
@@ -38,8 +41,17 @@ const handling = ready.mergeMap(() => {
 	// Stream that shrinks the categories navbar when the page is scrolled
 	const navShrinkHandling = scrolled.map(() => () => $('.navbar').addClass('shrink'))
 		.merge(atTop.map(() => () => $('.navbar').removeClass('shrink')));
-
-	const [searchCreation, search] = createSearch(document.querySelector('.navbar .container>div')!);
+	const createSearch = createSideEffect(
+		'search-creation',
+		Observable.hotBindCallback(render),
+		<Search id='search' notification={Search.notification} />,
+		document.querySelector('.navbar .container>div')
+	);
+	const search = Search.componentCreated<string>()
+		.first()
+		.map(({dataStream}) => dataStream)
+		.mergeAll();
+	const searchCreation = Observable.of(createSearch);
 
 	const categoriesRoot = document.querySelector('.categories')!,
 		operatorsRoot = document.querySelector('main')!;
@@ -58,7 +70,7 @@ const handling = ready.mergeMap(() => {
 	return navShrinkHandling.merge(
 		searchCreation,
 		categoryUI,
-		operatorsUI
+		operatorsUI,
 	);
 })
 	.catch((err, source) => {

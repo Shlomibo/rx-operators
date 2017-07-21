@@ -9,8 +9,9 @@ import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 import { categories as categoriesData, categories, CategoryName } from '../data/categories';
 import { OperatorData, operators } from '../data/operators';
-import { createSideEffect, SideEffect } from '../side-effects';
+import { createSideEffect, SideEffect } from '../utils/side-effects';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { RXComponent, RXComponentProps } from '../utils/reactive-react';
 
 /**
  * A function that based on a root-element, category-display-stream and seach-stream,
@@ -32,13 +33,20 @@ export function allOperators(
 	const creation = createSideEffect(
 		'operators',
 		Observable.hotBindCallback(render),
-		<Operators operators={operators} categoryDisplay={categoryDisplay} search={search} uiUpdates={uiChanges} />,
+		<Operators operators={operators}
+			categoryDisplay={categoryDisplay}
+			search={search}
+			notification={Operators.notification} />,
 		root
 	);
 
-	return Observable.of(creation)
-		.concat(creation.completed.mergeAll()
-			.mergeMapTo(uiChanges));
+	return Observable.merge(
+		Observable.of(creation),
+		Operators.componentCreated()
+			.first()
+			.map(creationNot => creationNot.dataStream)
+			.mergeAll()
+	);
 }
 
 interface CategoryMarkerProperties {
@@ -64,43 +72,61 @@ function OperatorDescription({ html = '', className = '', img }: OperatorDescrip
 	);
 }
 
-interface OperatorsProperties {
+interface OperatorsProperties extends RXComponentProps<SideEffect> {
 	operators: Record<string, OperatorData>;
 	categoryDisplay: Observable<(categories: CategoryName[]) => boolean>;
 	search: Observable<string>;
-	uiUpdates: Observer<SideEffect>;
 }
-function Operators({
-	operators,
-	categoryDisplay,
-	search,
-	uiUpdates,
-}: OperatorsProperties) {
-	return (
-		<ul className='operators'> {
-			_(operators)
-				.toPairs()
-				.map(([name, data]: [string, OperatorData]) => ({
-					name,
-					...data
-				}))
-				.map(opData => (
-					<Operator key={opData.name} {...opData}
-						categoryDisplay={categoryDisplay}
-						search={search}
-						uiUpdates={uiUpdates}
-					/>
-				))
-				.value()
-		}
-		</ul>
-	);
+class Operators extends RXComponent()<SideEffect> {
+	public props: OperatorsProperties;
+	private readonly _token = Symbol('operator');
+	private readonly _sideEffects: Observable<SideEffect>;
+
+	constructor(props: OperatorsProperties) {
+		super(props);
+
+		this._sideEffects = Operator.componentCreated(token => token === this._token)
+			.map(compCreation => compCreation.dataStream)
+			.mergeAll();
+	}
+
+	public render() {
+		const {
+			operators,
+			categoryDisplay,
+			search,
+		} = this.props;
+
+		return (
+			<ul className='operators'> {
+				_(operators)
+					.toPairs()
+					.map(([name, data]: [string, OperatorData]) => ({
+						name,
+						...data
+					}))
+					.map(opData => (
+						<Operator key={opData.name} {...opData}
+							categoryDisplay={categoryDisplay}
+							search={search}
+							token={this._token}
+							notification={Operator.notification}
+						/>
+					))
+					.value()
+			}
+			</ul>
+		);
+	}
+
+	public static get notification() {
+		return (instance: Operators) => instance._sideEffects;
+	}
 }
-interface OperatorProperties extends OperatorData {
+interface OperatorProperties extends OperatorData, RXComponentProps<SideEffect> {
 	name: string;
 	categoryDisplay: Observable<(categories: CategoryName[]) => boolean>;
 	search: Observable<string>;
-	uiUpdates: Observer<SideEffect>;
 }
 interface OperatorStateTemplate {
 	collapsed: 'collapse' | '';
@@ -109,13 +135,11 @@ interface OperatorStateTemplate {
 	description?: string;
 }
 type OperatorState = Readonly<OperatorStateTemplate>;
-class Operator extends React.Component {
+class Operator extends RXComponent()<SideEffect> {
 	public props: Readonly<OperatorProperties>;
 	public state: OperatorState;
-	private _cleanup: Subscription;
 	private readonly _clicked = new Subject<any>();
 	private readonly _uiHandling: Observable<SideEffect>;
-	private readonly _handlingObserver: Observer<SideEffect>;
 
 	constructor(props: OperatorProperties) {
 		super(props);
@@ -124,22 +148,19 @@ class Operator extends React.Component {
 			catDisplay: '',
 			display: '',
 		};
-		this._handlingObserver = props.uiUpdates;
 
 		const SIDE_EFFECT = 'operator-ui';
 
 		const {
 			categoryDisplay,
 			search,
-		} = props;
-
-		const setState: (state: Partial<OperatorState>) => Observable<any> =
-			Observable.hotBindCallback(this.setState.bind(this));
-		const {
 			name,
 			categories,
 			description,
 		} = props;
+
+		const setState: (state: Partial<OperatorState>) => Observable<any> =
+			Observable.hotBindCallback(this.setState.bind(this));
 
 		const descriptionGeneration = mdToHtml(description)
 			.map(descHtml => createSideEffect(
@@ -179,12 +200,8 @@ class Operator extends React.Component {
 			descriptionGeneration,
 			collapseHandling,
 			categoryHandling,
-			searchHandling
+			searchHandling,
 		);
-	}
-
-	public componentWillMount() {
-		this._cleanup = this._uiHandling.subscribe(this._handlingObserver);
 	}
 
 	public render() {
@@ -213,7 +230,8 @@ class Operator extends React.Component {
 							.keys()
 							.map((category: CategoryName) =>
 								<CategoryMarker key={category} name={category} isActive={categories.includes(category)} />
-							)
+						)
+						.value()
 					}</ul>
 					<OperatorDescription className='col-sm-8 col-md-8 col-lg-9' html={description} img={img} />
 				</div>
@@ -221,8 +239,8 @@ class Operator extends React.Component {
 		);
 	}
 
-	public componentWillUnmount() {
-		this._cleanup.unsubscribe();
+	public static get notification() {
+		return (instance: Operator) => instance._uiHandling;
 	}
 }
 

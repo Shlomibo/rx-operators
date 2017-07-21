@@ -18,7 +18,8 @@ import {
 	CategoryName,
 	CategoryType
 	} from '../data/categories';
-import { createSideEffect, SideEffect } from '../side-effects';
+import { createSideEffect, SideEffect } from '../utils/side-effects';
+import { RXComponentProps, RXComponent } from '../utils/reactive-react';
 
 type DisplaySelection = (categories: CategoryName[]) => boolean;
 
@@ -32,15 +33,12 @@ type DisplaySelection = (categories: CategoryName[]) => boolean;
 export function allCategories(
 	root: Element
 ): [Observable<DisplaySelection>, Observable<SideEffect>] {
-	const uiChanges = new Subject<SideEffect>(),
-		displaySelection = new Subject<DisplaySelection>();
 
 	const uiCreation = createSideEffect(
 		'categories',
 		Observable.hotBindCallback(render),
 		(<Categories categoriesData={categories}
-			uiChanges={uiChanges}
-			displaySelection={displaySelection}
+			notification={Categories.notification}
 			initialDisplay={
 				_(categories)
 					.keys()
@@ -50,16 +48,22 @@ export function allCategories(
 		/>),
 		root
 	);
-	const uiHandling = Observable.of(uiCreation)
-		.concat(uiCreation.completed.mergeAll()
-			.mergeMapTo(uiChanges));
+
+	const [displaySelection, uiHandling] = Categories.componentCreated()
+		.map(({ dataStream }) => dataStream as Observable<CategoriesNotification>)
+		.mergeAll()
+		.share()
+		.partition(({ type }) => type === 'display') as [Observable<DisplayNotification>, Observable<UINotification>];
 
 	return [
 		// A stream of functions to check if an operator should be viewed
-		displaySelection.asObservable(),
+		displaySelection.map(({ display }) => display),
 
 		// A stream to create and update the UI
-		uiHandling,
+		Observable.merge(
+			Observable.of(uiCreation),
+			uiHandling.map(({ ui }) => ui),
+		)
 	];
 }
 
@@ -92,24 +96,30 @@ interface CategoryAndData {
 	name: CategoryName;
 	data: CategoryData;
 }
-interface CategoriesProperties {
-	uiChanges: Observer<SideEffect>;
+interface UINotification {
+	type: 'ui';
+	ui: SideEffect;
+}
+interface DisplayNotification {
+	type: 'display';
+	display: DisplaySelection;
+}
+type CategoriesNotification = UINotification | DisplayNotification;
+interface CategoriesProperties extends RXComponentProps<CategoriesNotification> {
 	categoriesData: CategoriesData;
-	displaySelection: Observer<DisplaySelection>;
 	initialDisplay: CategoryDisplay[];
 }
-class Categories extends React.Component {
+class Categories extends RXComponent()<CategoriesNotification> {
 	public readonly props: CategoriesProperties;
 	private readonly _categories: JSX.Element[];
-	private readonly _cleanup: Subscription;
+	private readonly _notifications: Observable<CategoriesNotification>;
+	private readonly _token = Symbol('categories');
 
 	constructor(props: CategoriesProperties) {
 		super(props);
 		const {
 			categoriesData,
-			uiChanges,
 			initialDisplay,
-			displaySelection,
 		} = props;
 
 		const clicksSubject = new Subject<CategoryName>(),
@@ -123,13 +133,20 @@ class Categories extends React.Component {
 			.toPairs()
 			.map(([name, data]: [CategoryName, CategoryData]) => (
 				<Category key={name} name={name} {...data}
-					uiChanges={uiChanges}
+					notification={Category.notification}
 					activationByClicks={clicksMerger}
-					isActive={catDisplay[name].display} />
+					isActive={catDisplay[name].display}
+					token={this._token} />
 			))
 			.value();
 
-		this._cleanup = catDisplaySelection.subscribe(displaySelection);
+		this._notifications = Observable.merge(
+			catDisplaySelection.map(display => ({ type: 'display' as 'display', display })),
+			Category.componentCreated(token => token === this._token)
+				.map(({ dataStream }) => dataStream)
+				.mergeAll()
+				.map(ui => ({ type: 'ui' as 'ui', ui })),
+		);
 	}
 
 	public render() {
@@ -140,26 +157,25 @@ class Categories extends React.Component {
 		);
 	}
 
-	public componentWillUnmount() {
-		this._cleanup.unsubscribe();
+	public static get notification() {
+		return (instance: Categories) => instance._notifications;
 	}
 }
 
-interface CategoryProperties {
+interface CategoryProperties extends RXComponentProps<SideEffect> {
 	name: CategoryName;
 	description: string;
 	isActive: boolean;
-	uiChanges: Observer<SideEffect>;
 	activationByClicks: StreamsMerger;
 }
 interface CategoryUIState {
 	readonly isActive: boolean;
 }
-class Category extends React.Component {
+class Category extends RXComponent()<SideEffect> {
 	public state: CategoryUIState;
 	public props: CategoryProperties;
 	private _clicks = new Subject<CategoryName>();
-	private readonly _cleanup: Subscription;
+	private readonly _uiChanges: Observable<SideEffect>;
 
 	constructor(props: CategoryProperties) {
 		super(props);
@@ -171,14 +187,13 @@ class Category extends React.Component {
 		} = props;
 
 		const catActivation = activationByClicks(this._clicks);
-		this._cleanup = catActivation.map(displayedCategories => displayedCategories.includes(name))
+		this._uiChanges = catActivation.map(displayedCategories => displayedCategories.includes(name))
 			.distinctUntilChanged()
 			.map(isActive => createSideEffect(
 				'category',
 				Observable.hotBindCallback(this.setState.bind(this)),
 				{ isActive }
-			))
-			.subscribe(props.uiChanges);
+			));
 	}
 
 	public render() {
@@ -197,8 +212,8 @@ class Category extends React.Component {
 		);
 	}
 
-	public componentWillUnmount() {
-		this._cleanup.unsubscribe();
+	public static get notification() {
+		return (instance: Category) => instance._uiChanges;
 	}
 }
 

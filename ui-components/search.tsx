@@ -1,33 +1,36 @@
 import * as React from 'react';
 import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import { createSideEffect, SideEffect } from '../side-effects';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { createSideEffect, SideEffect } from '../utils/side-effects';
 import { render } from 'react-dom';
+import { RXComponent, RXComponentProps } from '../utils/reactive-react';
 
-export function createSearch(root: Element): [Observable<SideEffect>, Observable<string>] {
-	const searchesSubject = new Subject<string>();
-	return [
-		Observable.of(createSideEffect(
-			'search',
-			Observable.hotBindCallback(render),
-			<Search />,
-			root
-		)),
+export interface SearchProps extends RXComponentProps<string> {
+	id: string;
+}
+export class Search extends RXComponent()<string> {
+	public props: SearchProps;
+	private readonly _searchSubject: BehaviorSubject<string>;
 
-		searchesSubject.debounceTime(350),
-	];
+	constructor(props: SearchProps) {
+		super(props);
+		this._searchSubject = new BehaviorSubject('');
+	}
 
-	function Search() {
+	public render() {
 		return (
-			<div className='input-group'>
+			<div id={this.props.id} className='input-group'>
 				<span className='input-group-addon'><span className='glyphicon glyphicon-search'></span></span>
 				<input type='text'
-					id='search'
-					onInput={({ target }) => searchesSubject.next((target as HTMLInputElement).value)}
+					onInput={({ target }) => this._searchSubject.next((target as HTMLInputElement).value)}
 					className='form-control'
 					placeholder="map, filter, etc'"
 				/>
 			</div>
 		);
+	}
+
+	static get notification() {
+		return (search: Search) => search._searchSubject.debounceTime(350);
 	}
 }

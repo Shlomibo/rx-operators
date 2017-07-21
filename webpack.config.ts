@@ -6,7 +6,7 @@ import { Configuration } from 'webpack';
 const publicPath = resolve(__dirname, 'public');
 
 const conf: Configuration = {
-	entry: ['./app.ts'],
+	entry: ['./app.tsx'],
 	context: __dirname,
 	output: {
 		filename: 'app.js',
