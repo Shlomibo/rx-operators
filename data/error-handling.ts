@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const errorHandlingOperators: Record<string, OperatorData> = {
+export const errorHandlingOperators: Operators = {
 	catch: {
 		categories: [
 			'error',

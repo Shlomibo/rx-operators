@@ -30,7 +30,8 @@ export interface OperatorData {
 }
 
 const categories = <CategoryName[]>Object.keys(catDefinition);
-export const operators = {
+export type Operators = Record<string, OperatorData>;
+export const operators: Operators = {
 	...combinationOperators,
 	...errorHandlingOperators,
 	...filteringOperators,

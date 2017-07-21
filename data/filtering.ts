@@ -1,5 +1,6 @@
-import { OperatorData } from './operators';
-export const filteringOperators: Record<string, OperatorData> = {
+import { Operators } from './operators';
+
+export const filteringOperators: Operators = {
 	debounce: {
 		categories: [
 			'filter',

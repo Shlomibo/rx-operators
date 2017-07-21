@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const utilityOperators: Record<string, OperatorData> = {
+export const utilityOperators: Operators = {
 	do: {
 		categories: [
 			'utility',

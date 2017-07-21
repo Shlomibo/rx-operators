@@ -107,3 +107,19 @@ export const categories = <CategoriesData>_({
 		categories[name] = data;
 		return categories;
 	}, <Partial<Record<CategoryName, CategoryData>>>{ });
+
+/**
+ * @var typeInitialization Category initialization by category-type
+ */
+const typeInitialization: Record<CategoryType, (cat: CategoryName) => boolean> = {
+	effects: cat => true,
+	usage: cat => false,
+};
+
+// A function that map category-display object, from category-name
+export function initialDisplayOutOfName(name: CategoryName) {
+	return {
+		name,
+		display: typeInitialization[categories[name].type](name),
+	};
+}

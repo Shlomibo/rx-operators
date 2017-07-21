@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const aggregationOprators: Record<string, OperatorData> = {
+export const aggregationOprators: Operators = {
 	count: {
 		categories: [
 			'aggregation',

@@ -1,51 +1,27 @@
 import * as React from 'react';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Subscription } from 'rxjs/Subscription';
 
-export type CTor<T> = new (...args) => T;
-export interface RXComponentProps<T> {
-	notification: Observable<T> | ((source: InternalRXComponent<T>) => Observable<T>);
-	token?: any;
-}
-export interface Notification<T> {
-	dataStream: Observable<T>;
-	token: any;
-}
+export type StateUpdate<TState> = Pick<TState, keyof TState>;
+export abstract class RXComponent<TProp = {}, TState = {}> extends React.Component<TProp, TState> {
+	protected _cleanup?: Subscription;
 
-abstract class InternalRXComponent<T> extends React.Component { }
+	protected subscribe(observable: Observable<StateUpdate<TState>>) {
+		const cleanup = observable.subscribe({
+			next: state => this.setState(state),
+			error: err => console.error(err),
+			complete: () => console.warn('State stream completed', this),
+		});
 
-export function RXComponent() {
-	const creationSubject = new ReplaySubject<Notification<any>>();
-	abstract class RXComponent<TNotification> extends InternalRXComponent<TNotification> {
-		public props: RXComponentProps<TNotification>;
-
-		constructor(...args) {
-			super(...args);
-		}
-
-		public componentWillMount() {
-			if (super.componentWillMount) {
-				super.componentWillMount();
-			}
-
-			const notification = typeof this.props.notification === 'function'
-				? this.props.notification(this)
-				: this.props.notification!;
-
-			creationSubject.next({
-				dataStream: notification,
-				token: this.props.token,
-			});
-		}
-
-		public static componentCreated<T = any>(
-			filter?: (token) => boolean
-		): Observable<Notification<T>> {
-			return !!filter
-				? creationSubject.filter(({ token }) => filter(token))
-				: creationSubject.asObservable();
-		}
+		this._cleanup = !!this._cleanup
+			? this._cleanup.add(cleanup)
+			: cleanup;
 	}
 
-	return RXComponent;
+	public componentWillUnmount() {
+		if (this._cleanup) {
+			this._cleanup.unsubscribe();
+		}
+	}
 }
