@@ -82,6 +82,19 @@ export class App extends RXComponent<{}, AppState> {
 
 	public render() {
 		const search = this._searchInput.debounceTime(350);
+		const categoriesInitialization = _(categories)
+			.toPairs()
+			.map(([name, data]: [CategoryName, CategoryData]) => ({
+				name,
+				data: {
+					...data,
+					display: initialDisplayOutOfName(name).display,
+				} as DataWithDisplay,
+			}))
+			.reduce((state, { name, data }) => {
+				state[name] = data;
+				return state;
+			}, {} as any as Record<CategoryName, DataWithDisplay>);
 
 		return (
 			<div>
@@ -94,21 +107,7 @@ export class App extends RXComponent<{}, AppState> {
 					</div>
 					<div className='categories'>
 						<Categories categoryClicks={cat => this._categoryClicked.next(cat)}
-							categoryDisplay={
-								_(categories)
-									.toPairs()
-									.map(([name, data]: [CategoryName, CategoryData]) => ({
-										name,
-										data: {
-											...data,
-											display: initialDisplayOutOfName(name).display,
-										} as DataWithDisplay,
-									}))
-									.reduce((state, { name, data }) => {
-										state[name] = data;
-										return state;
-									}, {} as any as Record<CategoryName, DataWithDisplay>)
-							}
+							categoryDisplay={categoriesInitialization}
 							displayUpdates={this._categoriesState}
 						/>
 					</div>

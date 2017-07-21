@@ -18,22 +18,23 @@ export function Operators({ operators, categoryDisplay, search }: OperatorsProps
 	categoryDisplay = categoryDisplay.share();
 	search = search.share();
 
+	const operatorsMarkup = _(operators)
+		.toPairs()
+		.map(([name, data]: [string, OperatorData]) => ({
+			name,
+			...data
+		}))
+		.map(opData => (
+			<Operator key={opData.name} {...opData}
+				categoryDisplay={categoryDisplay}
+				search={search}
+			/>
+		))
+		.value();
+
 	return (
-		<ul className='operators'> {
-			_(operators)
-				.toPairs()
-				.map(([name, data]: [string, OperatorData]) => ({
-					name,
-					...data
-				}))
-				.map(opData => (
-					<Operator key={opData.name} {...opData}
-						categoryDisplay={categoryDisplay}
-						search={search}
-					/>
-				))
-				.value()
-		}
+		<ul className='operators'>
+			{operatorsMarkup}
 		</ul>
 	);
 }
@@ -116,7 +117,9 @@ class Operator extends RXComponent<OperatorProps, OperatorState> {
 							_(categoriesData)
 								.keys()
 								.map((category: CategoryName) =>
-									<CategoryMarker key={category} name={category} isActive={categories.includes(category)} />
+									<CategoryMarker key={category}
+										name={category}
+										isActive={categories.includes(category)} />
 								)
 								.value()
 						}</ul>
