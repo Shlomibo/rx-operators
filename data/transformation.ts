@@ -1,5 +1,6 @@
-import { OperatorData } from './operators';
-export const transformationOperators: Record<string, OperatorData> = {
+import { Operators } from './operators';
+
+export const transformationOperators: Operators = {
 	buffer: {
 		categories: [
 			'data',

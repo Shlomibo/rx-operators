@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const conditionalOperators: Record<string, OperatorData> = {
+export const conditionalOperators: Operators = {
 	defaultIfEmpty: {
 		categories: [
 			'conditional',

@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const multicastOperators: Record<string, OperatorData> = {
+export const multicastOperators: Operators = {
 	multicast: {
 		categories: [
 			'multicast',

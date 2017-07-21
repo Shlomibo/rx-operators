@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const creationOperators: Record<string, OperatorData> = {
+export const creationOperators: Operators = {
 	bindCallback: {
 		categories: [
 			'creation',

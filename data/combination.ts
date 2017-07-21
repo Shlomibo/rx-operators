@@ -1,6 +1,6 @@
-import { OperatorData } from './operators';
+import { Operators } from './operators';
 
-export const combinationOperators: Record<string, OperatorData> = {
+export const combinationOperators: Operators = {
 	combineLatest: {
 		categories: [
 			'combination',
