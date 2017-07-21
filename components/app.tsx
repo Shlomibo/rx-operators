@@ -1,3 +1,4 @@
+import * as $ from 'jquery';
 import * as _ from 'lodash';
 import * as React from 'react';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -15,8 +16,8 @@ import {
 	CategoryType,
 	initialDisplayOutOfName
 	} from '../data/categories';
-import { RXComponent } from '../utils/reactive-react';
 import { operators } from '../data/operators';
+import { RXComponent } from '../utils/reactive-react';
 
 export const CLS_CAT_INACTIVE = 'cat-inactive';
 
@@ -58,12 +59,11 @@ export class App extends RXComponent<{}, AppState> {
 					state[name] = display;
 					return state;
 				}, {} as any as CategoriesState);
-		}
-		);
+		});
 
 		this._operatorDisplay = categoriesStateStream.map(({ active: activeType, ...categories }) => {
-			const typeCategories = categories[activeType];
-			const selectedCategories = _(typeCategories)
+			const activeCategories = categories[activeType];
+			const selectedCategories = _(activeCategories)
 				.filter(({ display }) => display)
 				.map(({ name }) => name)
 				.value();
@@ -169,24 +169,8 @@ function categoriesStateHandling(
 	const catHandling = clicksSubject.asObservable()
 		// Scanned to update categories-state, based on clicked category
 		.scan(categoryHandling, categoriesState);
-		// // Mapped to current active-categories, and active category-type
-		// .map(({ active, ...categories }) => {
-		// 	const typeCategories = categories[active];
-		// 	const selectedCategories = _(typeCategories)
-		// 		.filter(({ display }) => display)
-		// 		.map(({ name }) => name)
-		// 		.value();
-
-		// 	return {
-		// 		selectedCategories,
-		// 		active,
-		// 	};
-		// });
 
 	return catHandling;
-
-	// return catHandling.map(({ selectedCategories, active: activeType }) =>
-	// 	typeOperatorSelection[activeType](selectedCategories));
 
 	/**
 	 * Categories' state handling

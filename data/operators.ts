@@ -1,8 +1,3 @@
-import * as $ from 'jquery';
-
-// Required for bootstrap execution
-window['$'] = window['jQuery'] = $;
-import 'bootstrap/dist/js/npm';
 
 import * as _ from 'lodash';
 import * as marked from 'marked';

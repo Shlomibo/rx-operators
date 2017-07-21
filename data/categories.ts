@@ -1,4 +1,3 @@
-import * as $ from 'jquery';
 import * as _ from 'lodash';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/distinctUntilChanged';
