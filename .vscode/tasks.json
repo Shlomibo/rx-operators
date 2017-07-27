@@ -106,8 +106,8 @@
 					],
 					"background": {
 						"activeOnStart": true,
-						"endsPattern": "modules?$",
-						"beginsPattern": "."
+						"endsPattern": ".",
+						"beginsPattern": "modules?$"
 					}
 				}
 			]

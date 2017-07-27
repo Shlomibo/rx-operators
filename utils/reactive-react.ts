@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Subscription } from 'rxjs/Subscription';
+import { Subject } from 'rxjs/Subject';
 
 export type StateUpdate<TState> = Pick<TState, keyof TState>;
 export abstract class RXComponent<TProp = {}, TState = {}> extends React.Component<TProp, TState> {
@@ -24,11 +25,13 @@ export abstract class RXComponent<TProp = {}, TState = {}> extends React.Compone
 	}
 
 	public componentWillMount() {
-		this._cleanup = this._observable.subscribe({
-			next: state => this.setState(state),
-			error: err => console.error(err),
-			complete: () => console.warn('State stream completed', this),
-		});
+		if (this._observable) {
+			this._cleanup = this._observable.subscribe({
+				next: state => this.setState(state),
+				error: err => console.error(err),
+				complete: () => console.warn('State stream completed', this),
+			});
+		}
 	}
 
 	public componentWillUnmount() {
@@ -36,5 +39,31 @@ export abstract class RXComponent<TProp = {}, TState = {}> extends React.Compone
 			this._cleanup.unsubscribe();
 		}
 		this.__cleanup = undefined;
+	}
+}
+
+export interface ReactEventObserver<T = Event> {
+	(event: T): void;
+	asObservable(): Observable<T> & {
+		ofValue(): Observable<string>;
+	};
+}
+export function reactEventObserver<T = Event>(): ReactEventObserver<T> {
+	const eventSubject = new Subject<T>();
+
+	return Object.assign(observeEvent, {
+		asObservable() {
+			const observable = eventSubject.asObservable();
+
+			return Object.assign(observable, {
+				ofValue() {
+					return observable.map(({ target }: any) => (target as HTMLInputElement).value);
+				},
+			});
+		},
+	});
+
+	function observeEvent(event: T): void {
+		eventSubject.next(event);
 	}
 }

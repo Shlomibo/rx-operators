@@ -7,7 +7,7 @@ import { Subject } from 'rxjs/Subject';
 import { DisplaySelection } from './app';
 import { categories as categoriesData, CategoryDisplay, CategoryName } from '../data/categories';
 import { OperatorData, operators, Operators } from '../data/operators';
-import { RXComponent, StateUpdate } from '../utils/reactive-react';
+import { RXComponent, StateUpdate, reactEventObserver } from '../utils/reactive-react';
 
 export interface OperatorsProps {
 	operators: Operators;
@@ -51,7 +51,7 @@ interface OperatorState {
 	description?: string;
 }
 class Operator extends RXComponent<OperatorProps, OperatorState> {
-	private readonly _clicked = new Subject<any>();
+	private readonly _clicked = reactEventObserver<any>();
 
 	constructor(props: OperatorProps) {
 		super(props);
@@ -72,7 +72,8 @@ class Operator extends RXComponent<OperatorProps, OperatorState> {
 		const descriptionGeneration = mdToHtml(description)
 			.map(descHtml => ({ description: descHtml }) as StateUpdate<OperatorState>);
 
-		const collapseHandling = this._clicked.scan((collapse: boolean) => !collapse, true)
+		const collapseHandling = this._clicked.asObservable()
+			.scan((collapse: boolean) => !collapse, true)
 			.map(collapse => collapse ? 'collapse' : '')
 			.map(collapsed => ({ collapsed }) as StateUpdate<OperatorState>);
 
@@ -111,7 +112,7 @@ class Operator extends RXComponent<OperatorProps, OperatorState> {
 
 		return (
 			<li id={name} className={`operator panel panel-default ${ catDisplay } ${ display }`}>
-				<div className='panel-heading container-fluid' onClick={() => this._clicked.next()}>
+				<div className='panel-heading container-fluid' onClick={this._clicked}>
 					<div className='col-sm-6 col-lg-5'>
 						<ul className='categories'>{
 							_(categoriesData)

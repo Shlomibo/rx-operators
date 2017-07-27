@@ -17,7 +17,7 @@ import {
 	initialDisplayOutOfName
 	} from '../data/categories';
 import { operators } from '../data/operators';
-import { RXComponent } from '../utils/reactive-react';
+import { RXComponent, reactEventObserver, ReactEventObserver } from '../utils/reactive-react';
 
 export const CLS_CAT_INACTIVE = 'cat-inactive';
 
@@ -25,8 +25,8 @@ export interface AppState {
 	isScrolled: boolean;
 }
 export class App extends RXComponent<{}, AppState> {
-	private readonly _searchInput = new BehaviorSubject<string>('');
-	private readonly _categoryClicked = new Subject<CategoryName>();
+	private readonly _searchInput = reactEventObserver<string>();
+	private readonly _categoryClicked = reactEventObserver<CategoryName>();
 	private readonly _categoriesState: Observable<CategoriesState>;
 	private readonly _operatorDisplay: Observable<DisplaySelection>;
 
@@ -81,7 +81,8 @@ export class App extends RXComponent<{}, AppState> {
 	}
 
 	public render() {
-		const search = this._searchInput.debounceTime(350);
+		const search = this._searchInput.asObservable()
+			.debounceTime(350);
 		const categoriesInitialization = _(categories)
 			.toPairs()
 			.map(([name, data]: [CategoryName, CategoryData]) => ({
@@ -102,11 +103,11 @@ export class App extends RXComponent<{}, AppState> {
 					<div className='container'>
 						<h5 className='col-md-8'>RX operators</h5>
 						<div className='col-md-4'>
-							<Search onInput={str => this._searchInput.next(str)}/>
+							<Search onInput={this._searchInput}/>
 						</div>
 					</div>
 					<div className='categories'>
-						<Categories categoryClicks={cat => this._categoryClicked.next(cat)}
+						<Categories categoryClicks={this._categoryClicked}
 							categoryDisplay={categoriesInitialization}
 							displayUpdates={this._categoriesState}
 						/>
@@ -144,7 +145,7 @@ const typeOperatorSelection: Record<CategoryType, (selected: CategoryName[]) => 
 };
 
 function categoriesStateHandling(
-	clicksSubject: Subject<CategoryName>
+	clicksSubject: ReactEventObserver<CategoryName>
 ): Observable<CategoryState> {
 	// A function to create category-filter (a filtering function) from category-type
 	const byTypeFilter = (type: CategoryType) => (name: CategoryName) => categories[name].type === type;
