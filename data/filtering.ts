@@ -19,7 +19,7 @@ emitted on the source Observable since the duration Observable was spawned.  \
 
 If a new value appears before the duration Observable emits, the previous value will be dropped \
 and will not be emitted on the output Observable.`,
-	},
+},
 
 	audit: {
 		categories: [
