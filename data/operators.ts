@@ -20,6 +20,7 @@ export interface OperatorData {
 	categories: CategoryName[];
 	img?: string;
 	url: string;
+	playWithUrl?: string;
 	description: string;
 }
 

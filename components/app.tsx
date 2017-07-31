@@ -16,8 +16,12 @@ import {
 	CategoryType,
 	initialDisplayOutOfName,
 } from '../data/categories';
-import { operators } from '../data/operators';
-import { RXComponent, reactEventObserver, ReactEventObserver } from '../utils/reactive-react';
+import { operators, Operators as OperatorsType } from '../data/operators';
+import {
+	RXComponent,
+	reactEventObserver,
+	ReactEventObserver,
+} from '../utils/reactive-react';
 
 export const CLS_CAT_INACTIVE = 'cat-inactive';
 
@@ -36,28 +40,32 @@ export class App extends RXComponent<{}, AppState> {
 			isScrolled: false,
 		};
 
-		const categoriesStateStream = categoriesStateHandling(this._categoryClicked).share();
+		const categoriesStateStream = categoriesStateHandling(
+			this._categoryClicked
+		).share();
 
-		this._categoriesState = categoriesStateStream.map(({ active, effects, usage }) => {
-			switch (active) {
-				case 'effects': {
-					usage = usage.map(({ name }) => ({ name, display: false }));
-					break;
+		this._categoriesState = categoriesStateStream.map(
+			({ active, effects, usage }) => {
+				switch (active) {
+					case 'effects': {
+						usage = usage.map(({ name }) => ({ name, display: false }));
+						break;
+					}
+					case 'usage': {
+						effects = effects.map(({ name }) => ({ name, display: false }));
+						break;
+					}
+					default: {
+						throw new Error('Unknow category type');
+					}
 				}
-				case 'usage': {
-					effects = effects.map(({ name }) => ({ name, display: false }));
-					break;
-				}
-				default: {
-					throw new Error('Unknow category type');
-				}
+
+				return _(effects).concat(usage).reduce((state, { name, display }) => {
+					state[name] = display;
+					return state;
+				}, ({} as any) as CategoriesState);
 			}
-
-			return _(effects).concat(usage).reduce((state, { name, display }) => {
-				state[name] = display;
-				return state;
-			}, ({} as any) as CategoriesState);
-		});
+		);
 
 		this._operatorDisplay = categoriesStateStream.map(
 			({ active: activeType, ...categories }) => {
@@ -91,38 +99,72 @@ export class App extends RXComponent<{}, AppState> {
 					display: initialDisplayOutOfName(name).display,
 				} as DataWithDisplay,
 			}))
-			.reduce((state, { name, data }) => {
-				state[name] = data;
-				return state;
-			}, ({} as any) as Record<CategoryName, DataWithDisplay>);
+			.reduce(
+				(state, { name, data }) => {
+					state[name] = data;
+					return state;
+				},
+				({} as any) as Record<CategoryName, DataWithDisplay>
+			);
 
 		return (
-			<div>
-				<nav className="navbar navbar-default navbar-fixed-top">
-					<div className="container">
-						<h5 className="col-md-8">RX operators</h5>
-						<div className="col-md-4">
-							<Search onInput={this._searchInput} />
-						</div>
-					</div>
-					<div className="categories">
-						<Categories
-							categoryClicks={this._categoryClicked}
-							categoryDisplay={categoriesInitialization}
-							displayUpdates={this._categoriesState}
-						/>
-					</div>
-				</nav>
-				<main>
-					<Operators
-						operators={operators}
-						categoryDisplay={this._operatorDisplay}
-						search={search}
-					/>
-				</main>
-			</div>
+			<AppUI
+				searched={this._searchInput}
+				categoryClicked={this._categoryClicked}
+				categories={categoriesInitialization}
+				categoriesState={this._categoriesState}
+				operators={operators}
+				operatorDisplay={this._operatorDisplay}
+				searches={search}
+			/>
 		);
 	}
+}
+
+interface AppUIProps {
+	searched: (search: string) => void;
+	categoryClicked: (category: CategoryName) => void;
+	categories: Record<CategoryName, DataWithDisplay>;
+	categoriesState: Observable<CategoriesState>;
+	operators: OperatorsType;
+	operatorDisplay: Observable<DisplaySelection>;
+	searches: Observable<string>;
+}
+function AppUI({
+	searched,
+	categoryClicked,
+	categories,
+	categoriesState,
+	operators,
+	operatorDisplay,
+	searches,
+}: AppUIProps) {
+	return (
+		<div>
+			<nav className="navbar navbar-default navbar-fixed-top">
+				<div className="container">
+					<h5 className="col-md-8">RX operators</h5>
+					<div className="col-md-4">
+						<Search onInput={searched} />
+					</div>
+				</div>
+				<div className="categories">
+					<Categories
+						categoryClicks={categoryClicked}
+						categoryDisplay={categories}
+						displayUpdates={categoriesState}
+					/>
+				</div>
+			</nav>
+			<main>
+				<Operators
+					operators={operators}
+					categoryDisplay={operatorDisplay}
+					search={searches}
+				/>
+			</main>
+		</div>
+	);
 }
 
 type CategoryState = Record<CategoryType, CategoryDisplay[]> & {
@@ -230,7 +272,9 @@ function categoriesStateHandling(
 		clickedCategory: CategoryName
 	): CategoryDisplay[] {
 		// All categories excluding the clicked one
-		const filteredCategories = typeState.filter(({ name }) => name !== clickedCategory);
+		const filteredCategories = typeState.filter(
+			({ name }) => name !== clickedCategory
+		);
 
 		// Current category type considerred full, if all categories are displayed
 		const isTypeFull =
@@ -242,7 +286,9 @@ function categoriesStateHandling(
 		return !isTypeFull
 			? typeState.map(
 					({ name, display }) =>
-						name !== clickedCategory ? { name, display } : { name, display: !display }
+						name !== clickedCategory
+							? { name, display }
+							: { name, display: !display }
 				)
 			: // Otherwise, the whole category type is flipped, except of the selected category
 				typeState.map(({ name, display }) => ({

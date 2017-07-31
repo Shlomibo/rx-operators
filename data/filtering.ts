@@ -4,6 +4,7 @@ export const filteringOperators: Operators = {
 	debounce: {
 		categories: ['filter', 'time'],
 		img: 'debounce.png',
+		playWithUrl: 'http://rxmarbles.com/#debounce',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounce',
 		description: `Delays values emitted by the source Observable, but drops previous pending delayed emissions \
@@ -17,6 +18,29 @@ emitted on the source Observable since the duration Observable was spawned.  \
 
 If a new value appears before the duration Observable emits, the previous value will be dropped \
 and will not be emitted on the output Observable.`,
+	},
+
+	debounceTime: {
+		categories: ['filter', 'time'],
+		img: 'debounceTime.png',
+		playWithUrl: 'http://rxmarbles.com/#zip',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounceTime',
+		description: `Delays values emitted by the source Observable, but drops previous pending delayed \
+emissions if a new value arrives on the source Observable.  \
+
+This operator keeps track of the most recent value from the source Observable, \
+and emits that only when \`dueTime\` enough time has passed without any other value appearing on the source \
+Observable.  \
+
+If a new value appears before \`dueTime\` silence occurs, \
+the previous value will be dropped and will not be emitted on the output Observable.  \
+
+This is a rate-limiting operator, because it is impossible for more than one value to be emitted \
+in any time window of duration \`dueTime\`, but it is also a delay-like operator since output emissions \
+do not occur at the same time as they did on the source Observable.  \
+
+Optionally takes a \`IScheduler\` for managing timers.`,
 	},
 
 	audit: {
@@ -48,6 +72,7 @@ and this process repeats for the next source value.`,
 	sample: {
 		categories: ['filter', 'time', 'completion'],
 		img: 'sample.png',
+		playWithUrl: 'http://rxmarbles.com/#sample',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-sample',
 		description: `Emits the most recently emitted value from the source Observable whenever another \
@@ -67,31 +92,10 @@ The \`notifier\` is subscribed to as soon as the output Observable is subscribed
 		description: 'It is just like using `sample(Observable.interval(time))`.',
 	},
 
-	debounceTime: {
-		categories: ['filter', 'time'],
-		img: 'debounceTime.png',
-		url:
-			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounceTime',
-		description: `Delays values emitted by the source Observable, but drops previous pending delayed \
-emissions if a new value arrives on the source Observable.  \
-
-This operator keeps track of the most recent value from the source Observable, \
-and emits that only when \`dueTime\` enough time has passed without any other value appearing on the source \
-Observable.  \
-
-If a new value appears before \`dueTime\` silence occurs, \
-the previous value will be dropped and will not be emitted on the output Observable.  \
-
-This is a rate-limiting operator, because it is impossible for more than one value to be emitted \
-in any time window of duration \`dueTime\`, but it is also a delay-like operator since output emissions \
-do not occur at the same time as they did on the source Observable.  \
-
-Optionally takes a \`IScheduler\` for managing timers.`,
-	},
-
 	throttle: {
 		categories: ['filter'],
 		img: 'throttle.png',
+		playWithUrl: 'http://rxmarbles.com/#throttle',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-throttle',
 		description: `It's like throttleTime, but the silencing duration is determined by a second Observable.\
@@ -114,6 +118,7 @@ for the next source value.`,
 	throttleTime: {
 		categories: ['filter'],
 		img: 'throttleTime.png',
+		playWithUrl: 'http://rxmarbles.com/#throttleTime',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-throttleTime',
 		description: `Emits the source Observable values on the output Observable when its internal timer is \
@@ -128,6 +133,7 @@ After \`duration\` milliseconds has passed, the timer is disabled, and this proc
 	distinct: {
 		categories: ['filter'],
 		img: 'distinct.png',
+		playWithUrl: 'http://rxmarbles.com/#distinct',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinct',
 		description: `Returns an Observable that emits all items emitted by the source Observable that are \
@@ -144,6 +150,7 @@ with an equality check against previous values.`,
 	distinctUntilChanged: {
 		categories: ['filter'],
 		img: 'distinctUntilChanged.png',
+		playWithUrl: 'http://rxmarbles.com/#distinctUntilChanged',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinctUntilChanged',
 		description: `Returns an Observable that emits all items emitted by the source Observable \
@@ -189,6 +196,7 @@ or \`NoSuchElementException\` respectively.`,
 	first: {
 		categories: ['filter', 'completion'],
 		img: 'first.png',
+		playWithUrl: 'http://rxmarbles.com/#first',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-first',
 		description:
@@ -198,6 +206,7 @@ or \`NoSuchElementException\` respectively.`,
 	elementAt: {
 		categories: ['filter', 'completion'],
 		img: 'elementAt.png',
+		playWithUrl: 'http://rxmarbles.com/#elementAt',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-elementAt',
 		description: `Returns an Observable that emits the item at the specified \`index\` in the source Observable, \
@@ -210,6 +219,7 @@ the output Observable will emit an \`ArgumentOutOfRangeError\` error.`,
 	last: {
 		categories: ['filter'],
 		img: 'last.png',
+		playWithUrl: 'http://rxmarbles.com/#last',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-last',
 		description: `Returns an Observable that emits only the last item emitted by the source Observable.  \
@@ -222,6 +232,7 @@ satisfies the predicate.`,
 	filter: {
 		categories: ['filter'],
 		img: 'filter.png',
+		playWithUrl: 'http://rxmarbles.com/#filter',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-filter',
 		description: `It is similar to the well-known \`Array.prototype.filter\` method.  \
@@ -233,6 +244,7 @@ only emits those values that yielded \`true\`.`,
 	ignoreElements: {
 		categories: ['filter'],
 		img: 'ignoreElements.png',
+		playWithUrl: 'http://rxmarbles.com/#ignoreElements',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-ignoreElements',
 		description:
@@ -243,6 +255,7 @@ or `error`.',
 	skip: {
 		categories: ['filter'],
 		img: 'skip.png',
+		playWithUrl: 'http://rxmarbles.com/#skip',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skip',
 		description:
@@ -252,6 +265,7 @@ or `error`.',
 	skipUntil: {
 		categories: ['filter'],
 		img: 'skipUntil.png',
+		playWithUrl: 'http://rxmarbles.com/#skipUntil',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skipUntil',
 		description:
@@ -262,6 +276,7 @@ a second Observable emits an item.',
 	skipWhile: {
 		categories: ['filter'],
 		img: 'skipWhile.png',
+		playWithUrl: 'http://rxmarbles.com/#skipWhile',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skipWhile',
 		description:
@@ -273,6 +288,7 @@ but emits all further source items as soon as the condition becomes `false`.',
 	take: {
 		categories: ['filter', 'completion'],
 		img: 'take.png',
+		playWithUrl: 'http://rxmarbles.com/#take',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-take',
 		description: `Returns an Observable that emits only the first \`count\` values emitted by \
@@ -285,6 +301,7 @@ regardless if the source completes.`,
 	takeLast: {
 		categories: ['filter', 'time'],
 		img: 'takeLast.png',
+		playWithUrl: 'http://rxmarbles.com/#takeLast',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeLast',
 		description: `Returns an Observable that emits at most the last \`count\` values emitted by \
@@ -301,6 +318,7 @@ followed by the complete notification.`,
 	takeUntil: {
 		categories: ['filter', 'completion'],
 		img: 'takeUntil.png',
+		playWithUrl: 'http://rxmarbles.com/#takeUntil',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeUntil',
 		description: `Lets values pass until a second Observable, \`notifier\`, emits something.  \
@@ -311,6 +329,7 @@ Then, it completes.`,
 	takeWhile: {
 		categories: ['filter', 'completion'],
 		img: 'takeWhile.png',
+		playWithUrl: 'http://rxmarbles.com/#takeWhile',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeWhile',
 		description: `Takes values from the source only while they pass the condition given.  \

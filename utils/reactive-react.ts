@@ -43,13 +43,19 @@ export abstract class RXComponent<TProp = {}, TState = {}> extends React.Compone
 	}
 }
 
-export interface ReactEventObserver<T = Event> {
+export interface ParameterlessEventObserver {
+	(): void;
+	asObservable(): Observable<any>;
+}
+export interface ReactEventObserver<T = Event> extends ParameterlessEventObserver {
 	(event: T): void;
 	asObservable(): Observable<T> & {
 		ofValue(): Observable<string>;
 	};
 }
-export function reactEventObserver<T = Event>(): ReactEventObserver<T> {
+export function reactEventObserver(): ParameterlessEventObserver;
+export function reactEventObserver<T>(): ReactEventObserver<T>;
+export function reactEventObserver<T>(): ReactEventObserver<T> {
 	const eventSubject = new Subject<T>();
 
 	return Object.assign(observeEvent, {

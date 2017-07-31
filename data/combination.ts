@@ -4,6 +4,7 @@ export const combinationOperators: Operators = {
 	combineLatest: {
 		categories: ['combination', 'data'],
 		img: 'combineLatest.png',
+		playWithUrl: 'http://rxmarbles.com/#combineLatest',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-combineLatest',
 		description: `Combines the values from this Observable with values from Observables passed as arguments.  \
@@ -26,6 +27,7 @@ using the \`combineLatest\` operator.`,
 	concat: {
 		categories: ['combination', 'completion', 'subscription'],
 		img: 'concat.png',
+		playWithUrl: 'http://rxmarbles.com/#concat',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-concat',
 		description: `Creates an output Observable which sequentially emits all values from every \
@@ -74,6 +76,7 @@ is still executing.`,
 	merge: {
 		categories: ['combination'],
 		img: 'merge.png',
+		playWithUrl: 'http://rxmarbles.com/#merge',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-merge',
 		description: `Subscribes to each given input Observable (either the source or an Observable given as argument),\
@@ -104,6 +107,7 @@ It flattens an Observable-of-Observables.`,
 	race: {
 		categories: ['combination', 'completion', 'filter'],
 		img: 'race.png',
+		playWithUrl: 'http://rxmarbles.com/#race',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-race',
 		description:
@@ -114,6 +118,7 @@ from the combination of this Observable and supplied Observables.',
 	startWith: {
 		categories: ['combination', 'data'],
 		img: 'startWith.png',
+		playWithUrl: 'http://rxmarbles.com/#startWith',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-startWith',
 		description:
@@ -139,6 +144,7 @@ and begins emitting items from it.`,
 	withLatestFrom: {
 		categories: ['combination', 'data', 'filter'],
 		img: 'withLatestFrom.png',
+		playWithUrl: 'http://rxmarbles.com/#withLatestFrom',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-withLatestFrom',
 		description: `Combines each value from the source Observable (the instance) with the latest values from \
@@ -150,7 +156,9 @@ All input Observables **must emit** at least one value before the output Observa
 	zip: {
 		categories: ['combination', 'data', 'time'],
 		img: 'zip.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-zip',
+		playWithUrl: 'http://rxmarbles.com/#zip',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-zip',
 		description: `After all observables emit a value, emit all these values as an array.  \
 
 Could be used to syncronize the emissions of one observable with the emission of other.`,

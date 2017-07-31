@@ -4,6 +4,7 @@ export const aggregationOprators: Operators = {
 	count: {
 		categories: ['aggregation', 'data', 'filter'],
 		img: 'count.png',
+		playWithUrl: 'http://rxmarbles.com/#count',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-count',
 		description: `Counts the number of emissions on the source and emits that number when the source completes.
@@ -23,7 +24,9 @@ represent the number of *source values* that matched \`true\` with the \`predica
 	max: {
 		categories: ['aggregation', 'filter'],
 		img: 'max.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-max',
+		playWithUrl: 'http://rxmarbles.com/#max',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-max',
 		description: `The \`max\` operator operates on an Observable that emits numbers
 (or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
 it emits a **single** item: the item with the largest value.`,
@@ -32,7 +35,9 @@ it emits a **single** item: the item with the largest value.`,
 	min: {
 		categories: ['aggregation', 'filter'],
 		img: 'min.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-min',
+		playWithUrl: 'http://rxmarbles.com/#min',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-min',
 		description: `The \`min\` operator operates on an Observable that emits numbers
 (or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
 it emits a **single** item: the item with the smallest value.`,
@@ -41,6 +46,7 @@ it emits a **single** item: the item with the smallest value.`,
 	reduce: {
 		categories: ['aggregation', 'data', 'filter'],
 		img: 'reduce.png',
+		playWithUrl: 'http://rxmarbles.com/#reduce',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-reduce',
 		description: `Applies an accumulator function over the *source Observable*, and returns
