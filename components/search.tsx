@@ -5,11 +5,14 @@ export interface SearchProps {
 }
 export function Search({ onInput }: SearchProps) {
 	return (
-		<div className='input-group'>
-			<span className='input-group-addon'><span className='glyphicon glyphicon-search'></span></span>
-			<input type='text'
+		<div className="input-group">
+			<span className="input-group-addon">
+				<span className="glyphicon glyphicon-search" />
+			</span>
+			<input
+				type="text"
 				onInput={({ target }) => onInput((target as HTMLInputElement).value)}
-				className='form-control'
+				className="form-control"
 				placeholder="map, filter, etc'"
 			/>
 		</div>

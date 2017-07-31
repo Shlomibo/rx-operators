@@ -2,27 +2,21 @@ import { Operators } from './operators';
 
 export const conditionalOperators: Operators = {
 	defaultIfEmpty: {
-		categories: [
-			'conditional',
-			'data',
-		],
+		categories: ['conditional', 'data'],
 		img: 'defaultIfEmpty.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-defaultIfEmpty',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-defaultIfEmpty',
 		description: `Emits a given value if the source Observable *completes* without emitting any \`next\`
 value,  \
 
-Otherwise mirrors the source Observable.`
+Otherwise mirrors the source Observable.`,
 	},
 
 	every: {
-		categories: [
-			'conditional',
-			'data',
-			'filter',
-			'completion',
-		],
+		categories: ['conditional', 'data', 'filter', 'completion'],
 		img: 'every.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-every',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-every',
 		description: `Returns an Observable that emits whether or not every item of the source satisfies
 the condition specified.
 
@@ -32,35 +26,28 @@ If an item fails the contions, the *output observable* would emit a single \`nex
 and then \`complete\`.  \
 
 Otherwise, when the *source observable* would complete, the *output observable* would emit a
-single \`next\` with \`true\` value before it's complete.`
+single \`next\` with \`true\` value before it's complete.`,
 	},
 
 	find: {
-		categories: [
-			'conditional',
-			'filter',
-			'completion',
-		],
+		categories: ['conditional', 'filter', 'completion'],
 		img: 'find.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-find',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-find',
 		description: `Emits only the first value emitted by the *source Observable* that meets some condition.
 
 \`find\` searches for the first item in the *source Observable* that matches the specified \`predicate\`,
 and returns the first occurrence in the source.
 
 Unlike [\`first\`](#first), the \`predicate\` is required in \`find\`, and does not emit an error
-if a valid value is not found.`
+if a valid value is not found.`,
 	},
 
 	findIndex: {
-		categories: [
-			'conditional',
-			'data',
-			'filter',
-			'completion',
-		],
+		categories: ['conditional', 'data', 'filter', 'completion'],
 		img: 'findIndex.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-findIndex',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-findIndex',
 		description: `Emits only the index of the first value emitted by the *source Observable*
 that meets some condition.
 
@@ -70,21 +57,17 @@ that meets some condition.
 and returns the (zero-based) index of the first occurrence in the source.  \
 
 Unlike [\`first\`](#first), the \`predicate\` is required in findIndex, but the *output observable* does not
-emit an error if a valid value is not found.`
+emit an error if a valid value is not found.`,
 	},
 
 	isEmpty: {
-		categories: [
-			'conditional',
-			'data',
-			'filter',
-			'completion',
-		],
+		categories: ['conditional', 'data', 'filter', 'completion'],
 		img: 'isEmpty.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-isEmpty',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-isEmpty',
 		description: `Returns an observable that emits \`true\` if the *source observable* completes without
 emitting any \`next\`.  \
 
-Otherwise, \`false\` is emitted for the first \`next\` emission, followed by \`complete\`.`
-	}
+Otherwise, \`false\` is emitted for the first \`next\` emission, followed by \`complete\`.`,
+	},
 };

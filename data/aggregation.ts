@@ -2,13 +2,10 @@ import { Operators } from './operators';
 
 export const aggregationOprators: Operators = {
 	count: {
-		categories: [
-			'aggregation',
-			'data',
-			'filter',
-		],
+		categories: ['aggregation', 'data', 'filter'],
 		img: 'count.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-count',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-count',
 		description: `Counts the number of emissions on the source and emits that number when the source completes.
 
 \`count\` transforms an Observable that emits values into an Observable that emits a single value
@@ -20,41 +17,32 @@ emitting a value first.  \
 If the *source Observable* does not terminate at all, \`count\` will neither emit a value nor terminate.
 
 This operator takes an optional \`predicate\` function as argument, in which case the output emission will
-represent the number of *source values* that matched \`true\` with the \`predicate\`.`
+represent the number of *source values* that matched \`true\` with the \`predicate\`.`,
 	},
 
 	max: {
-		categories: [
-			'aggregation',
-			'filter',
-		],
+		categories: ['aggregation', 'filter'],
 		img: 'max.png',
 		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-max',
 		description: `The \`max\` operator operates on an Observable that emits numbers
 (or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
-it emits a **single** item: the item with the largest value.`
+it emits a **single** item: the item with the largest value.`,
 	},
 
 	min: {
-		categories: [
-			'aggregation',
-			'filter',
-		],
+		categories: ['aggregation', 'filter'],
 		img: 'min.png',
 		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-min',
 		description: `The \`min\` operator operates on an Observable that emits numbers
 (or it can take a \`compare\` function that compares between two items), and when *source Observable* completes,
-it emits a **single** item: the item with the smallest value.`
+it emits a **single** item: the item with the smallest value.`,
 	},
 
 	reduce: {
-		categories: [
-			'aggregation',
-			'data',
-			'filter',
-		],
+		categories: ['aggregation', 'data', 'filter'],
 		img: 'reduce.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-reduce',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-reduce',
 		description: `Applies an accumulator function over the *source Observable*, and returns
 the accumulated result when the *source* **completes**, given an optional seed value.
 
@@ -67,16 +55,14 @@ the *output Observable*.
 
 Note that \`reduce\` will only emit one value, only when the *source Observable* completes.  \
 
-It is equivalent to applying operator scan followed by operator last.`
+It is equivalent to applying operator scan followed by operator last.`,
 	},
 
 	toArray: {
-		categories: [
-			'aggregation',
-			'data',
-		],
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-toArray',
+		categories: ['aggregation', 'data'],
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-toArray',
 		description: `Returns an observable that once *source observable* is completed, would return
-an array with all emitted \`next\` data items.`
-	}
+an array with all emitted \`next\` data items.`,
+	},
 };

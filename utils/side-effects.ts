@@ -1,9 +1,9 @@
 import 'rxjs/add/operator/first';
 import 'rxjs/add/operator/takeUntil';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
-import { BoundCallbackObservable } from 'rxjs/observable/BoundCallbackObservable';
-import { Subject } from 'rxjs/Subject';
+import {ReplaySubject} from 'rxjs/ReplaySubject';
+import {Observable} from 'rxjs/Observable';
+import {BoundCallbackObservable} from 'rxjs/observable/BoundCallbackObservable';
+import {Subject} from 'rxjs/Subject';
 
 export type SideEffectFunc<T> = (...args: any[]) => T;
 export interface SideEffect<T = any> {
@@ -24,7 +24,10 @@ export interface SideEffect<T = any> {
  *
  * @return SideEffect function
  */
-export function createSideEffect<T = any>(sideEffect: SideEffectFunc<T>, ...args: any[]): SideEffect<T>;
+export function createSideEffect<T = any>(
+	sideEffect: SideEffectFunc<T>,
+	...args: any[]
+): SideEffect<T>;
 /**
  * Creates side effect function, that can be introspcted, and having side-effect-completion observable
  *
@@ -34,22 +37,23 @@ export function createSideEffect<T = any>(sideEffect: SideEffectFunc<T>, ...args
  *
  * @return SideEffect function
  */
-export function createSideEffect<T = void>(type: string, sideEffect: SideEffectFunc<T>, ...args: any[]): SideEffect<T>;
+export function createSideEffect<T = void>(
+	type: string,
+	sideEffect: SideEffectFunc<T>,
+	...args: any[]
+): SideEffect<T>;
 export function createSideEffect<T = void>(
 	sideEffectOrType: SideEffectFunc<T> | string,
 	argOrSideEffect: any | SideEffectFunc<T>,
 	...args: any[]
 ): SideEffect<T> {
-
-	let sideEffect: SideEffectFunc<T>,
-		type: string | undefined;
+	let sideEffect: SideEffectFunc<T>, type: string | undefined;
 
 	// Infer which overload was called
 	if (typeof sideEffectOrType === 'function') {
 		sideEffect = sideEffectOrType;
 		args.unshift(argOrSideEffect);
-	}
-	else {
+	} else {
 		type = sideEffectOrType;
 		sideEffect = argOrSideEffect;
 	}
@@ -65,8 +69,7 @@ export function createSideEffect<T = void>(
 		sideEffect,
 		args,
 		completed: completed.asObservable(),
-		cancelled: cancellation.takeUntil(completed)
-			.first(),
+		cancelled: cancellation.takeUntil(completed).first(),
 
 		cancel: () => {
 			didCancel = true;
@@ -84,8 +87,7 @@ export function createSideEffect<T = void>(
 			try {
 				completed.next(sideEffect(...args));
 				completed.complete();
-			}
-			catch (err) {
+			} catch (err) {
 				completed.error(err);
 			}
 		}
@@ -100,13 +102,10 @@ Observable.hotBindCallback = <any>function hotBindCallback(
 		const doneSubject = new ReplaySubject<any>();
 		try {
 			fn(...args, (...results) => {
-				const result = results.length === 1
-					? results[0]
-					: results;
+				const result = results.length === 1 ? results[0] : results;
 				doneSubject.next(result);
 			});
-		}
-		catch (err) {
+		} catch (err) {
 			doneSubject.error(err);
 		}
 

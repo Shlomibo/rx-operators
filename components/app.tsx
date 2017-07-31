@@ -14,8 +14,8 @@ import {
 	CategoryDisplay,
 	CategoryName,
 	CategoryType,
-	initialDisplayOutOfName
-	} from '../data/categories';
+	initialDisplayOutOfName,
+} from '../data/categories';
 import { operators } from '../data/operators';
 import { RXComponent, reactEventObserver, ReactEventObserver } from '../utils/reactive-react';
 
@@ -36,8 +36,7 @@ export class App extends RXComponent<{}, AppState> {
 			isScrolled: false,
 		};
 
-		const categoriesStateStream = categoriesStateHandling(this._categoryClicked)
-			.share();
+		const categoriesStateStream = categoriesStateHandling(this._categoryClicked).share();
 
 		this._categoriesState = categoriesStateStream.map(({ active, effects, usage }) => {
 			switch (active) {
@@ -54,22 +53,23 @@ export class App extends RXComponent<{}, AppState> {
 				}
 			}
 
-			return _(effects).concat(usage)
-				.reduce((state, { name, display }) => {
-					state[name] = display;
-					return state;
-				}, {} as any as CategoriesState);
+			return _(effects).concat(usage).reduce((state, { name, display }) => {
+				state[name] = display;
+				return state;
+			}, ({} as any) as CategoriesState);
 		});
 
-		this._operatorDisplay = categoriesStateStream.map(({ active: activeType, ...categories }) => {
-			const activeCategories = categories[activeType];
-			const selectedCategories = _(activeCategories)
-				.filter(({ display }) => display)
-				.map(({ name }) => name)
-				.value();
+		this._operatorDisplay = categoriesStateStream.map(
+			({ active: activeType, ...categories }) => {
+				const activeCategories = categories[activeType];
+				const selectedCategories = _(activeCategories)
+					.filter(({ display }) => display)
+					.map(({ name }) => name)
+					.value();
 
-			return typeOperatorSelection[activeType](selectedCategories);
-		});
+				return typeOperatorSelection[activeType](selectedCategories);
+			}
+		);
 
 		// Streams to notify when the page is page is scrolled/at the top
 		const state = Observable.fromEvent(window, 'scroll')
@@ -81,8 +81,7 @@ export class App extends RXComponent<{}, AppState> {
 	}
 
 	public render() {
-		const search = this._searchInput.asObservable()
-			.debounceTime(350);
+		const search = this._searchInput.asObservable().debounceTime(350);
 		const categoriesInitialization = _(categories)
 			.toPairs()
 			.map(([name, data]: [CategoryName, CategoryData]) => ({
@@ -95,26 +94,31 @@ export class App extends RXComponent<{}, AppState> {
 			.reduce((state, { name, data }) => {
 				state[name] = data;
 				return state;
-			}, {} as any as Record<CategoryName, DataWithDisplay>);
+			}, ({} as any) as Record<CategoryName, DataWithDisplay>);
 
 		return (
 			<div>
-				<nav className='navbar navbar-default navbar-fixed-top'>
-					<div className='container'>
-						<h5 className='col-md-8'>RX operators</h5>
-						<div className='col-md-4'>
-							<Search onInput={this._searchInput}/>
+				<nav className="navbar navbar-default navbar-fixed-top">
+					<div className="container">
+						<h5 className="col-md-8">RX operators</h5>
+						<div className="col-md-4">
+							<Search onInput={this._searchInput} />
 						</div>
 					</div>
-					<div className='categories'>
-						<Categories categoryClicks={this._categoryClicked}
+					<div className="categories">
+						<Categories
+							categoryClicks={this._categoryClicked}
 							categoryDisplay={categoriesInitialization}
 							displayUpdates={this._categoriesState}
 						/>
 					</div>
 				</nav>
 				<main>
-					<Operators operators={operators} categoryDisplay={this._operatorDisplay} search={search} />
+					<Operators
+						operators={operators}
+						categoryDisplay={this._operatorDisplay}
+						search={search}
+					/>
 				</main>
 			</div>
 		);
@@ -122,25 +126,29 @@ export class App extends RXComponent<{}, AppState> {
 }
 
 type CategoryState = Record<CategoryType, CategoryDisplay[]> & {
-	active: CategoryType,
+	active: CategoryType;
 };
 export type DisplaySelection = (categories: CategoryName[]) => boolean;
 
 const EFFECTS_CATEGORIES_COUNT = _(categories)
 	.toPairs()
 	.filter(([, data]: [string, CategoryData]) => data.type === 'effects')
-	.value()
-	.length;
+	.value().length;
 
 /**
  * @var typeOperatorSelection Mappping from category-type to functions, that returns functions to determine
  *    operator viewability
  */
-const typeOperatorSelection: Record<CategoryType, (selected: CategoryName[]) => DisplaySelection> = {
-	usage: selected => opCategories => _(opCategories)
-		.filter(category => categories[category].type === 'usage')
-		.some(opCategory => selected.includes(opCategory)),
-	effects: selected => opCategories => selected.length === EFFECTS_CATEGORIES_COUNT ||
+const typeOperatorSelection: Record<
+	CategoryType,
+	(selected: CategoryName[]) => DisplaySelection
+> = {
+	usage: selected => opCategories =>
+		_(opCategories)
+			.filter(category => categories[category].type === 'usage')
+			.some(opCategory => selected.includes(opCategory)),
+	effects: selected => opCategories =>
+		selected.length === EFFECTS_CATEGORIES_COUNT ||
 		selected.every(selectedCat => opCategories.includes(selectedCat)),
 };
 
@@ -148,25 +156,24 @@ function categoriesStateHandling(
 	clicksSubject: ReactEventObserver<CategoryName>
 ): Observable<CategoryState> {
 	// A function to create category-filter (a filtering function) from category-type
-	const byTypeFilter = (type: CategoryType) => (name: CategoryName) => categories[name].type === type;
+	const byTypeFilter = (type: CategoryType) => (name: CategoryName) =>
+		categories[name].type === type;
 
 	// Lodash wrapper to category-names
-	const categoryNames = _(categories)
-		.keys(),
+	const categoryNames = _(categories).keys(),
 		effectCategories = categoryNames.filter(byTypeFilter('effects')),
 		usageCategories = categoryNames.filter(byTypeFilter('usage'));
 
 	// Initial categoy state
 	const categoriesState: CategoryState = {
-		effects: effectCategories.map(initialDisplayOutOfName)
-			.value(),
-		usage: usageCategories.map(initialDisplayOutOfName)
-			.value(),
+		effects: effectCategories.map(initialDisplayOutOfName).value(),
+		usage: usageCategories.map(initialDisplayOutOfName).value(),
 		active: 'effects',
 	};
 
 	// The category handling stream is created from the multicast subject
-	const catHandling = clicksSubject.asObservable()
+	const catHandling = clicksSubject
+		.asObservable()
 		// Scanned to update categories-state, based on clicked category
 		.scan(categoryHandling, categoriesState);
 
@@ -218,25 +225,29 @@ function categoriesStateHandling(
 	 * @returns An array of category-display objects, representing the new state of all categories
 	 *    in a specific category-type
 	 */
-	function typeHandling(typeState: CategoryDisplay[], clickedCategory: CategoryName): CategoryDisplay[] {
+	function typeHandling(
+		typeState: CategoryDisplay[],
+		clickedCategory: CategoryName
+	): CategoryDisplay[] {
 		// All categories excluding the clicked one
 		const filteredCategories = typeState.filter(({ name }) => name !== clickedCategory);
 
 		// Current category type considerred full, if all categories are displayed
-		const isTypeFull = typeState.every(({ display }) => display) ||
+		const isTypeFull =
+			typeState.every(({ display }) => display) ||
 			// or if all categories, but the clicked category, are non-displayed.
 			filteredCategories.every(({ display }) => !display);
 
 		// If the category-type isn't full, return state, with the selected category-display flipped
 		return !isTypeFull
-			? typeState.map(({ name, display }) => name !== clickedCategory
-				? { name, display }
-				: { name, display: !display }
-			)
-			// Otherwise, the whole category type is flipped, except of the selected category
-			: typeState.map(({ name, display }) => ({
-				name,
-				display: name === clickedCategory || !display
-			}));
+			? typeState.map(
+					({ name, display }) =>
+						name !== clickedCategory ? { name, display } : { name, display: !display }
+				)
+			: // Otherwise, the whole category type is flipped, except of the selected category
+				typeState.map(({ name, display }) => ({
+					name,
+					display: name === clickedCategory || !display,
+				}));
 	}
 }

@@ -1,11 +1,14 @@
 import * as React from 'react';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Subscription } from 'rxjs/Subscription';
 import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
 export type StateUpdate<TState> = Pick<TState, keyof TState>;
-export abstract class RXComponent<TProp = {}, TState = {}> extends React.Component<TProp, TState> {
+export abstract class RXComponent<TProp = {}, TState = {}> extends React.Component<
+	TProp,
+	TState
+> {
 	private __cleanup?: Subscription;
 	private _observable: Observable<TState>;
 
@@ -18,9 +21,7 @@ export abstract class RXComponent<TProp = {}, TState = {}> extends React.Compone
 	}
 	protected set _cleanup(sub: Subscription | undefined) {
 		if (sub) {
-			this.__cleanup = !!this.__cleanup
-				? this.__cleanup.add(sub)
-				: sub;
+			this.__cleanup = !!this.__cleanup ? this.__cleanup.add(sub) : sub;
 		}
 	}
 
@@ -57,7 +58,9 @@ export function reactEventObserver<T = Event>(): ReactEventObserver<T> {
 
 			return Object.assign(observable, {
 				ofValue() {
-					return observable.map(({ target }: any) => (target as HTMLInputElement).value);
+					return observable.map(
+						({ target }: any) => (target as HTMLInputElement).value
+					);
 				},
 			});
 		},

@@ -1,4 +1,3 @@
-
 import * as _ from 'lodash';
 import * as marked from 'marked';
 import 'rxjs/add/observable/concat';

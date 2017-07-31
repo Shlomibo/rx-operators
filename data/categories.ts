@@ -11,20 +11,21 @@ import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 import { Subject } from 'rxjs/Subject';
 
-export type CategoryName = 'data' |
-	'time' |
-	'error' |
-	'completion' |
-	'subscription' |
-	'combination' |
-	'filter' |
-	'multicast' |
-	'transformation' |
-	'creation' |
-	'conditional' |
-	'aggregation' |
-	'utility' |
-	'debug';
+export type CategoryName =
+	| 'data'
+	| 'time'
+	| 'error'
+	| 'completion'
+	| 'subscription'
+	| 'combination'
+	| 'filter'
+	| 'multicast'
+	| 'transformation'
+	| 'creation'
+	| 'conditional'
+	| 'aggregation'
+	| 'utility'
+	| 'debug';
 export type CategoryType = 'effects' | 'usage';
 
 export interface CategoryData {
@@ -63,7 +64,8 @@ export const categories = <CategoriesData>_({
 	},
 	subscription: {
 		type: 'effects',
-		description: 'Do you want to change the way, or when, subscription is made to the source observable?',
+		description:
+			'Do you want to change the way, or when, subscription is made to the source observable?',
 	},
 	combination: {
 		type: 'usage',
@@ -79,33 +81,31 @@ export const categories = <CategoriesData>_({
 	},
 	aggregation: {
 		type: 'effects',
-		description: 'Do you want to produce a value from finite observable?'
+		description: 'Do you want to produce a value from finite observable?',
 	},
 	creation: {
 		type: 'effects',
-		description: 'Creates observables from common structures and patterns, values or thin air.'
+		description: 'Creates observables from common structures and patterns, values or thin air.',
 	},
 	debug: {
 		type: 'effects',
-		description: 'Looking for something usefull to debug?'
+		description: 'Looking for something usefull to debug?',
 	},
 	conditional: {
 		type: 'usage',
-		description: 'Conditional and boolean operators'
+		description: 'Conditional and boolean operators',
 	},
 	utility: {
 		type: 'usage',
-		description: 'Utility operators.'
-	}
+		description: 'Utility operators.',
+	},
 })
 	.toPairs<CategoryData>()
-	.orderBy([
-		([, { type }]) => type,
-	])
+	.orderBy([([, { type }]) => type])
 	.reduce((categories, [name, data]) => {
 		categories[name] = data;
 		return categories;
-	}, <Partial<Record<CategoryName, CategoryData>>>{ });
+	}, <Partial<Record<CategoryName, CategoryData>>>{});
 
 /**
  * @var typeInitialization Category initialization by category-type

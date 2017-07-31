@@ -2,12 +2,10 @@ import { Operators } from './operators';
 
 export const filteringOperators: Operators = {
 	debounce: {
-		categories: [
-			'filter',
-			'time',
-		],
+		categories: ['filter', 'time'],
 		img: 'debounce.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounce',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounce',
 		description: `Delays values emitted by the source Observable, but drops previous pending delayed emissions \
 if a new value arrives on the source Observable.  \
 
@@ -19,15 +17,13 @@ emitted on the source Observable since the duration Observable was spawned.  \
 
 If a new value appears before the duration Observable emits, the previous value will be dropped \
 and will not be emitted on the output Observable.`,
-},
+	},
 
 	audit: {
-		categories: [
-			'filter',
-			'time',
-		],
+		categories: ['filter', 'time'],
 		img: 'audit.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-audit',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-audit',
 		description: `It is similar to throttle, but emits the last value from the silenced time window, \
 instead of the first value.  \
 
@@ -43,22 +39,17 @@ and this process repeats for the next source value.`,
 	},
 
 	auditTime: {
-		categories: [
-			'filter',
-			'time',
-		],
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-auditTime',
-		description: 'It is just like using \`audit(Observable.interval(time))\`.',
+		categories: ['filter', 'time'],
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-auditTime',
+		description: 'It is just like using `audit(Observable.interval(time))`.',
 	},
 
 	sample: {
-		categories: [
-			'filter',
-			'time',
-			'completion',
-		],
+		categories: ['filter', 'time', 'completion'],
 		img: 'sample.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-sample',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-sample',
 		description: `Emits the most recently emitted value from the source Observable whenever another \
 Observable, the \`notifier\`, emits.  \
 
@@ -70,22 +61,17 @@ The \`notifier\` is subscribed to as soon as the output Observable is subscribed
 	},
 
 	sampleTime: {
-		categories: [
-			'filter',
-			'time',
-			'completion',
-		],
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-sampleTime',
-		description: 'It is just like using \`sample(Observable.interval(time))\`.',
+		categories: ['filter', 'time', 'completion'],
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-sampleTime',
+		description: 'It is just like using `sample(Observable.interval(time))`.',
 	},
 
 	debounceTime: {
-		categories: [
-			'filter',
-			'time',
-		],
+		categories: ['filter', 'time'],
 		img: 'debounceTime.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounceTime',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-debounceTime',
 		description: `Delays values emitted by the source Observable, but drops previous pending delayed \
 emissions if a new value arrives on the source Observable.  \
 
@@ -104,11 +90,10 @@ Optionally takes a \`IScheduler\` for managing timers.`,
 	},
 
 	throttle: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'throttle.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-throttle',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-throttle',
 		description: `It's like throttleTime, but the silencing duration is determined by a second Observable.\
 
 
@@ -127,11 +112,10 @@ for the next source value.`,
 	},
 
 	throttleTime: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'throttleTime.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-throttleTime',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-throttleTime',
 		description: `Emits the source Observable values on the output Observable when its internal timer is \
 disabled, and ignores source values when the timer is enabled.  \
 
@@ -142,11 +126,10 @@ After \`duration\` milliseconds has passed, the timer is disabled, and this proc
 	},
 
 	distinct: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'distinct.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinct',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinct',
 		description: `Returns an Observable that emits all items emitted by the source Observable that are \
 distinct by comparison from previous items.\
 
@@ -159,11 +142,10 @@ with an equality check against previous values.`,
 	},
 
 	distinctUntilChanged: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'distinctUntilChanged.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinctUntilChanged',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinctUntilChanged',
 		description: `Returns an Observable that emits all items emitted by the source Observable \
 that are distinct by comparison from the previous item.\
 
@@ -176,11 +158,10 @@ If a \`comparator\` function is not provided, an equality check is used by defau
 	},
 
 	distinctUntilKeyChanged: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'distinctUntilKeyChanged.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinctUntilKeyChanged',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-distinctUntilKeyChanged',
 		description: `Returns an Observable that emits all items emitted by the source Observable \
 that are distinct by comparison from the previous item, \
 using a property accessed by using the key provided to check if the two items are distinct.\
@@ -194,12 +175,10 @@ If a \`comparator\` function is not provided, an equality check is used by defau
 	},
 
 	single: {
-		categories: [
-			'filter',
-			'error',
-		],
+		categories: ['filter', 'error'],
 		img: 'single.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-single',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-single',
 		description: `Returns an Observable that emits the single item emitted by the source Observable that \
 matches a specified \`predicate\`, if that Observable emits one such item.  \
 
@@ -208,22 +187,19 @@ or \`NoSuchElementException\` respectively.`,
 	},
 
 	first: {
-		categories: [
-			'filter',
-			'completion',
-		],
+		categories: ['filter', 'completion'],
 		img: 'first.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-first',
-		description: 'Emits only the first value. Or emits only the first value that passes some test.',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-first',
+		description:
+			'Emits only the first value. Or emits only the first value that passes some test.',
 	},
 
 	elementAt: {
-		categories: [
-			'filter',
-			'completion',
-		],
+		categories: ['filter', 'completion'],
 		img: 'elementAt.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-elementAt',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-elementAt',
 		description: `Returns an Observable that emits the item at the specified \`index\` in the source Observable, \
 or a default value if that index is out of range and the \`defaultargument\` is provided.  \
 
@@ -232,11 +208,10 @@ the output Observable will emit an \`ArgumentOutOfRangeError\` error.`,
 	},
 
 	last: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'last.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-last',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-last',
 		description: `Returns an Observable that emits only the last item emitted by the source Observable.  \
 
 It optionally takes a \`predicate\` function as a parameter, in which case, rather than emitting the last item \
@@ -245,11 +220,10 @@ satisfies the predicate.`,
 	},
 
 	filter: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'filter.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-filter',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-filter',
 		description: `It is similar to the well-known \`Array.prototype.filter\` method.  \
 
 This operator takes values from the source Observable, passes them through a predicate function and \
@@ -257,52 +231,50 @@ only emits those values that yielded \`true\`.`,
 	},
 
 	ignoreElements: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'ignoreElements.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-ignoreElements',
-		description: 'Ignores all items emitted by the source Observable and only passes calls of \`complete\` \
-or \`error\`.',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-ignoreElements',
+		description:
+			'Ignores all items emitted by the source Observable and only passes calls of `complete` \
+or `error`.',
 	},
 
 	skip: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'skip.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skip',
-		description: 'Returns an Observable that skips the first \`count\` items emitted by the source Observable.',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skip',
+		description:
+			'Returns an Observable that skips the first `count` items emitted by the source Observable.',
 	},
 
 	skipUntil: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'skipUntil.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skipUntil',
-		description: 'Returns an Observable that skips items emitted by the source Observable until \
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skipUntil',
+		description:
+			'Returns an Observable that skips items emitted by the source Observable until \
 a second Observable emits an item.',
 	},
 
 	skipWhile: {
-		categories: [
-			'filter',
-		],
+		categories: ['filter'],
 		img: 'skipWhile.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skipWhile',
-		description: 'Returns an Observable that skips all items emitted by the source Observable \
-as long as a specified condition holds \`true\`, \
-but emits all further source items as soon as the condition becomes \`false\`.',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-skipWhile',
+		description:
+			'Returns an Observable that skips all items emitted by the source Observable \
+as long as a specified condition holds `true`, \
+but emits all further source items as soon as the condition becomes `false`.',
 	},
 
 	take: {
-		categories: [
-			'filter',
-			'completion',
-		],
+		categories: ['filter', 'completion'],
 		img: 'take.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-take',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-take',
 		description: `Returns an Observable that emits only the first \`count\` values emitted by \
 the source Observable.  \
 
@@ -311,12 +283,10 @@ regardless if the source completes.`,
 	},
 
 	takeLast: {
-		categories: [
-			'filter',
-			'time',
-		],
+		categories: ['filter', 'time'],
 		img: 'takeLast.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeLast',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeLast',
 		description: `Returns an Observable that emits at most the last \`count\` values emitted by \
 the source Observable.  \
 
@@ -329,24 +299,20 @@ followed by the complete notification.`,
 	},
 
 	takeUntil: {
-		categories: [
-			'filter',
-			'completion',
-		],
+		categories: ['filter', 'completion'],
 		img: 'takeUntil.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeUntil',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeUntil',
 		description: `Lets values pass until a second Observable, \`notifier\`, emits something.  \
 
 Then, it completes.`,
 	},
 
 	takeWhile: {
-		categories: [
-			'filter',
-			'completion',
-		],
+		categories: ['filter', 'completion'],
 		img: 'takeWhile.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeWhile',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-takeWhile',
 		description: `Takes values from the source only while they pass the condition given.  \
 
 When the first value does not satisfy, it completes.`,
