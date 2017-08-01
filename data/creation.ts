@@ -267,4 +267,99 @@ subject.subscribe(
 subject.next(JSON.stringify({ op: 'hello' }));
 \`\`\``,
 	},
+
+	generate: {
+		categories: ['creation', 'utility', 'data'],
+		url:
+			'https://github.com/ReactiveX/rxjs/blob/master/src/observable/GenerateObservable.ts#L66-L88',
+		img: 'generate.png',
+		description: `Creates an observable that behaves like a for-loop.
+
+> Allows simple conversion of a simple *for-loop* <sub>(I.E not <em>for-in</em> or <em>for-of</em> loop)</sub>
+into an observable.
+
+Consider the following for-loops:
+
+\`\`\` typescript
+// Really simple for-loop, that should have been consumed with 'range'
+for (let i = 0; i < 10; i++) {
+  // Do something with i...
+}
+
+/**
+ * Does something with objects that implement the iterator-pattern
+ *     in a way which is different from ES6 definition.
+ */
+function iterateOverNonStandardIterable(it: NonStandardIterable) {
+  const iterator = it.getIterator();
+
+  for (
+    // Initialization
+    let { hasNext, key } = next(iterator);
+    // Test
+    hasNext;
+    // Iteration
+    { hasNext, key } = next(iterator)
+  ) {
+    const value = it[key];
+    // Do something with value...
+  }
+
+  function next(it: NonStandardIterator) {
+    const hasNext = it.hasNext();
+
+    return {
+      hasNext,
+      key: hasNext && it.next(),
+    };
+  }
+}
+\`\`\`
+
+They could be consumed with \`generate\`
+
+\`\`\` typescript
+// An observable of 0..9 integers...
+const simpleLoop = Observable.generate(
+  // Initialization
+  0,
+  // Test
+  i => i < 10,
+  // Iteration
+  i => i + 1,
+  // Projection
+  i => i
+);
+
+/**
+ * Projects the values from objects that implement the iterator-pattern
+ *     in a way which is different from ES6 definition.
+ */
+function fromNonStandardIterable(it: NonStandardIterable) {
+  const iterator = it.getIterator();
+
+  return Observable.generate(
+    // Initialization
+    () => next(iterator),
+    // Test
+    ({ hasNext }) => hasNext,
+    // Iteration
+    () => next(iterator),
+    // Projection
+    ({ key }) => iterator[key]
+  );
+
+  function next(it: NonStandardIterator) {
+    const hasNext = it.hasNext();
+
+    return {
+      hasNext,
+      key: hasNext && it.next(),
+    };
+  }
+}
+\`\`\`
+
+<sub>Read more about the [*iterator pattern*](https://en.wikipedia.org/wiki/Iterator_pattern)</sub>`,
+	},
 };

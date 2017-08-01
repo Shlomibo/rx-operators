@@ -1,12 +1,54 @@
 import { Operators } from './operators';
 
 export const multicastOperators: Operators = {
+	connect: {
+		categories: ['subscription', 'multicast'],
+		img: 'multicast.png',
+		url: 'http://reactivex.io/rxjs/manual/overview.html#multicasted-observables',
+		description: `**This *method* applies only to \`ConnectableObservable\`s, which are observables
+that are created with [\`multicast\`](#multicast), or one of the [\`publish\`](#publish)/[\`share\`](#share)
+operator varieties.**
+
+Cause the \`ConnectableObservable\` to subscribe to its source observable, regardless of how many
+observers subscribed to it.  \
+Returns a \`Subscription\` that can be used to unsubscribe from the source observable.
+
+> Warms up (makes it hot) a \`ConnectableObservable\`.
+
+If you're looking for more automatic way to warm up a \`ConnectableObservable\` use
+[\`refCount\`](#refCount).`
+	},
+
+	refCount: {
+		categories: ['subscription', 'multicast'],
+		img: 'multicast.png',
+		url: 'http://reactivex.io/rxjs/manual/overview.html#reference-counting',
+		description: `**This *method* applies only to \`ConnectableObservable\`s, which are observables
+that are created with [\`multicast\`](#multicast), or one of the [\`publish\`](#publish)/[\`share\`](#share)
+operator varieties.**
+
+Returns an Observable that keeps track of how many subscribers it has.  \
+
+When the number of subscribers increases from \`0\` to \`1\`, it will call \`connect()\`,
+starting the execution.  \
+
+When the number of subscribers decreases back from \`1\` to \`0\`, that is, when the output observable is
+fully unsubscribed, it would \`unsubscribe\` from the subscription retuned from \`connect\`.
+
+---
+
+If you were created the \`ConnectableObservable\` by calling one of the \`publish\` operators, you can
+replace it with a similar \`share\` operator, instead of calling \`refCount\`.`
+	},
+
 	multicast: {
 		categories: ['multicast', 'subscription'],
 		img: 'multicast.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-multicast',
-		description: 'Share source utilizing the provided `Subject`.',
+		description: `Creates a
+[\`ConnectableObservable\`](http://reactivex.io/rxjs/manual/overview.html#multicasted-observables)
+utilizing the provided \`Subject\`.`,
 	},
 
 	publish: {

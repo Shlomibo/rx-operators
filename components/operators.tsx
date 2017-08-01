@@ -201,6 +201,8 @@ function OperatorDescription({
 	img,
 	playWithUrl,
 }: OperatorDescriptionProperties) {
+	const descColCount = !!img ? 6 : 12;
+
 	const imgUI = img && <img className="col-sm-6 image-rounded" src={`./img/${img}`} />;
 	const playWithLink = playWithUrl && (
 		<a href={playWithUrl} title="Play with operator on RxJS Marbles" target="_blank">
@@ -210,7 +212,10 @@ function OperatorDescription({
 
 	return (
 		<div className={`operator-desc container-fluid ${className}`}>
-			<div className="col-sm-6" dangerouslySetInnerHTML={{ __html: html }} />
+			<div
+				className={`col-sm-${descColCount}`}
+				dangerouslySetInnerHTML={{ __html: html }}
+			/>
 			{playWithLink || imgUI}
 		</div>
 	);

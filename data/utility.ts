@@ -83,4 +83,58 @@ observable* had already completed.
 
 > It's like [\`timeout\`](#timeout), but instead of emitting an \`error\`, a second observable is subscribed.`,
 	},
+
+	finally: {
+		categories: ['utility', 'subscription'],
+		url:
+			'https://github.com/ReactiveX/rxjs/blob/master/src/operator/finally.ts#L6-L13',
+		description: `Returns an Observable that mirrors the source Observable,
+but will call a specified function when the source terminates (when it emits \`complete\`
+or \`error\`, or when the output observable is unsubscribed).
+
+> Calls a specified function on termination.`,
+	},
+
+	let: {
+		categories: [
+			'data',
+			'time',
+			'higher-order',
+			'error',
+			'completion',
+			'subscription',
+			'filter',
+			'aggregation',
+			'utility',
+			'debug',
+		],
+		url: 'https://www.learnrxjs.io/operators/utility/let.html',
+		description: `\`let\` allows you to use as an operator, *any* function that gets
+an observable as the first parameter, and returns an observable.
+
+> Let you apply a *function over observables*, as if it was an operator (method).
+
+---
+
+##### Example:
+
+\`\`\` typescript
+// A function that logs observable's values to the console
+function logObservable(observable: Observable<any>) {
+  return observable.do(x => console.log(x))
+    .catch(err => {
+      console.error(err);
+      return Observable.throw(err);
+    });
+}
+
+const observable = Observable.interval(1000)
+  // ... some operators ...
+  .let(logObservable)
+  .map(x => doSomethins(x));
+
+observable.subscribe(val => console.log('let FROM FUNCTION:', val));
+\`\`\`
+`,
+	},
 };

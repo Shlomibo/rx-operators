@@ -108,7 +108,13 @@ inner Observables have completed.  \
 
 Any error delivered by a inner Observable will be immediately emitted on the output Observable.  \
 
-It flattens an Observable-of-Observables.`,
+It flattens an Observable-of-Observables.
+
+Unlink [\`concatAll\`](#concatAll), [\`switch\`](#switch) and [\`exhaust\`](#exhaust), \`mergeAll\`
+does not affect subscription to the source observables.  \
+
+It subscribes to each ovservable as soon as it arrives, and unsubscribes from it when it completes,
+or when the output observable is unsubscribed.`,
 	},
 
 	race: {
