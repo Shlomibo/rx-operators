@@ -15,9 +15,7 @@ const conf: Configuration = {
 	},
 	resolve: {
 		extensions: ['.ts', '.tsx', '.js', '.jsx'],
-		modules: [
-			'node_modules',
-		],
+		modules: ['node_modules'],
 	},
 	module: {
 		rules: [
@@ -25,27 +23,23 @@ const conf: Configuration = {
 				test: /\.html$/,
 				use: [
 					{ loader: 'html-loader' },
-					// { loader: 'extract-loader' },
-					// { loader: 'file-loader' },
-				]
-			}, {
+				],
+			},
+			{
 				test: /\.less$/,
 				use: ExtractText.extract({
 					fallback: 'style-loader',
-					use: [
-						'css-loader',
-						'less-loader',
-					]
+					use: ['css-loader', 'less-loader'],
 				}),
-			}, {
+			},
+			{
 				test: /\.css$/,
 				use: ExtractText.extract({
 					fallback: 'style-loader',
-					use: [
-						'css-loader',
-					]
+					use: ['css-loader'],
 				}),
-			}, {
+			},
+			{
 				test: /\.(jpg|png|bmp|svg|gif)$/,
 				use: [
 					{
@@ -53,14 +47,16 @@ const conf: Configuration = {
 						options: {
 							name: './img/[name].[ext]',
 							publicPath: './img',
-						}
+						},
 					},
 				],
-			}, {
+			},
+			{
 				test: /\.(ts|tsx|js|jsx)$/,
 				loader: 'ts-loader',
 				exclude: /node_modules/,
-			}, {
+			},
+			{
 				test: /\.(woff|woff2|eot|ttf|svg)$/,
 				use: [
 					{
@@ -68,26 +64,26 @@ const conf: Configuration = {
 						options: {
 							limit: '102400',
 							name: './fonts/[hash].[ext]',
-							publicPath: './fonts'
-						}
-					}
-				]
+							publicPath: './fonts',
+						},
+					},
+				],
 			},
 		],
 	},
 	devtool: 'cheap-module-source-map',
 	plugins: [
 		new ExtractText({
-			filename: 'style.css'
+			filename: 'style.css',
 		}),
 		new ExtractHtml({
 			title: 'RX operators',
-			template: './index.html'
-		})
+			template: './index.html',
+		}),
 	],
 	watchOptions: {
 		aggregateTimeout: 1500,
 		ignored: /node_modules/,
-	}
+	},
 };
 export default conf;

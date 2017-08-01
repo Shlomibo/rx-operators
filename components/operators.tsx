@@ -1,17 +1,17 @@
 import * as _ from 'lodash';
-import * as marked from 'marked';
 import * as React from 'react';
 import 'rxjs/add/observable/merge';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { DisplaySelection } from './app';
+import { OperatorData, operators, Operators } from '../data/operators';
+import { getParser } from '../markdown';
+import { reactEventObserver, RXComponent, StateUpdate } from '../utils/reactive-react';
 import {
 	categories as categoriesData,
 	CategoryDisplay,
 	CategoryName,
 } from '../data/categories';
-import { OperatorData, operators, Operators } from '../data/operators';
-import { RXComponent, StateUpdate, reactEventObserver } from '../utils/reactive-react';
 
 export interface OperatorsProps {
 	operators: Operators;
@@ -153,9 +153,10 @@ function OperatorUI({
 	img,
 	playWithUrl,
 }: OperatorUIProps) {
+	const id = name.replace(' ', '-');
 	return (
 		<li
-			id={name}
+			id={id}
 			className={`operator panel panel-default ${categoryDisplay} ${display}`}
 		>
 			<div className="panel-heading container-fluid" onClick={headerClick}>
@@ -215,6 +216,7 @@ function OperatorDescription({
 	);
 }
 
+const parser = getParser();
 function mdToHtml(md: string): Observable<string> {
-	return Observable.of<string>(marked(md));
+	return Observable.of(parser.render(md));
 }

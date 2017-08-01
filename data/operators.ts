@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import * as marked from 'marked';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/expand';

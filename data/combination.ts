@@ -14,7 +14,14 @@ the most recent values any time any of the input Observables emits.`,
 	},
 
 	combineAll: {
-		categories: ['combination', 'data', 'time', 'completion', 'subscription'],
+		categories: [
+			'combination',
+			'data',
+			'time',
+			'completion',
+			'subscription',
+			'higher-order',
+		],
 		img: 'combineAll.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-combineAll',
@@ -37,7 +44,7 @@ It concatenates multiple Observables together by sequentially emitting their val
 	},
 
 	concatAll: {
-		categories: ['combination', 'completion'],
+		categories: ['combination', 'completion', 'higher-order'],
 		img: 'concatAll.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-concatAll',
@@ -48,7 +55,7 @@ It flattens an Observable-of-Observables by putting one inner Observable after t
 	},
 
 	exhaust: {
-		categories: ['combination', 'completion', 'subscription', 'filter'],
+		categories: ['combination', 'completion', 'subscription', 'filter', 'higher-order'],
 		img: 'exhaust.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-exhaust',
@@ -89,7 +96,7 @@ It flattens multiple Observables together by blending their values into one Obse
 	},
 
 	mergeAll: {
-		categories: ['combination', 'completion'],
+		categories: ['combination', 'completion', 'higher-order'],
 		img: 'mergeAll.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-mergeAll',
@@ -127,7 +134,7 @@ to emit items emitted by the source Observable.',
 	},
 
 	switch: {
-		categories: ['combination', 'completion', 'filter', 'subscription'],
+		categories: ['combination', 'completion', 'filter', 'subscription', 'higher-order'],
 		img: 'switch.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-switch',
@@ -165,7 +172,7 @@ Could be used to syncronize the emissions of one observable with the emission of
 	},
 
 	zipAll: {
-		categories: ['combination', 'data', 'time'],
+		categories: ['combination', 'data', 'time', 'higher-order'],
 		img: 'zipAll.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-zipAll',

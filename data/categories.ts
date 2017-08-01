@@ -14,6 +14,7 @@ import { Subject } from 'rxjs/Subject';
 export type CategoryName =
 	| 'data'
 	| 'time'
+	| 'higher-order'
 	| 'error'
 	| 'completion'
 	| 'subscription'
@@ -85,7 +86,8 @@ export const categories = <CategoriesData>_({
 	},
 	creation: {
 		type: 'effects',
-		description: 'Creates observables from common structures and patterns, values or thin air.',
+		description:
+			'Creates observables from common structures and patterns, values or thin air.',
 	},
 	debug: {
 		type: 'effects',
@@ -99,13 +101,20 @@ export const categories = <CategoriesData>_({
 		type: 'usage',
 		description: 'Utility operators.',
 	},
+	'higher-order': {
+		type: 'effects',
+		description: 'Operator to use on higher-order observable',
+	},
 })
 	.toPairs<CategoryData>()
 	.orderBy([([, { type }]) => type])
-	.reduce((categories, [name, data]) => {
-		categories[name] = data;
-		return categories;
-	}, <Partial<Record<CategoryName, CategoryData>>>{});
+	.reduce(
+		(categories, [name, data]) => {
+			categories[name] = data;
+			return categories;
+		},
+		<Partial<Record<CategoryName, CategoryData>>>{}
+	);
 
 /**
  * @var typeInitialization Category initialization by category-type

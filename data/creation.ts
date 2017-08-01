@@ -60,7 +60,8 @@ any resources consumed when subscribed, and may cancel ongoing operations.`,
 	defer: {
 		categories: ['creation', 'subscription'],
 		img: 'defer.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-defer',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-defer',
 		description: `\`defer\` allows you to create the Observable only when the Observer subscribes,
 and create a fresh Observable for each Observer.
 
@@ -76,7 +77,8 @@ same Observable, in fact each subscriber gets its own individual Observable.
 	empty: {
 		categories: ['creation'],
 		img: 'empty.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-empty',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-empty',
 		description: `Creates an Observable that emits no items to the Observer and immediately emits a
 complete notification.
 
@@ -87,7 +89,8 @@ It can be used for composing with other Observables, such as in a [\`mergeMap\`]
 	from: {
 		categories: ['creation'],
 		img: 'from.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-from',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-from',
 		description: `Creates an Observable from an Array, an array-like object, a Promise, an iterable object,
 or an Observable-like object.
 
@@ -156,7 +159,8 @@ The first emission is not sent immediately, but only after the first period has 
 	never: {
 		categories: ['creation'],
 		img: 'never.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-never',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-never',
 		description: `Creates an Observable that has no emissions to the Observer.
 
 This static operator is useful for creating a simple Observable that emits nothing;
@@ -175,7 +179,8 @@ Subscriptions need to be manually disposed.
 	of: {
 		categories: ['creation', 'data'],
 		img: 'of.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-of',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-of',
 		description: `This static operator is useful for creating a simple Observable that only emits
 the arguments given, and then \`complete\` notification.  \
 
@@ -187,7 +192,8 @@ It can be used for composing with other Observables, such as with [\`concat\`](#
 	range: {
 		categories: ['creation'],
 		img: 'range.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-range',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-range',
 		description: `Creates an Observable that emits a sequence of numbers within the specified range.
 
 \`range\` operator emits a range of sequential integers, in order, where you select the \`start\` of
@@ -197,7 +203,8 @@ the range and the \`count\` of emitted numbers.`,
 	throw: {
 		categories: ['creation', 'error'],
 		img: 'throw.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-throw',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-throw',
 		description: `Creates an Observable that emits nothing but an \`error\`.
 
 This static operator is useful for creating a simple Observable that only emits the \`error\` notification.  \
@@ -208,7 +215,8 @@ It can be used for composing with other Observables, such as in a [\`mergeMap\`]
 	timer: {
 		categories: ['creation', 'time'],
 		img: 'timer.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-timer',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-timer',
 		description: `Creates an Observable that starts emitting after an \`initialDelay\` and emits
 increasing numbers after each \`period\` of time thereafter.
 
@@ -222,5 +230,41 @@ The first emission happens after the specified \`initialDelay\`. The initial del
 If \`period\` is not specified, the output Observable emits only one value, \`0\`.  \
 
 Otherwise, it emits an infinite sequence.`,
+	},
+
+	webSocket: {
+		categories: ['creation'],
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-webSocket',
+		description: `Create a **Subject** that wraps around w3c-compatible \`WebSocket\` object.
+
+*Wraps browser \`WebSocket\`*
+\`\`\` typescript
+let subject = Observable.webSocket('ws://localhost:8081');
+subject.subscribe(
+   (msg) => console.log('message received: ' + msg),
+   (err) => console.log(err),
+   () => console.log('complete')
+ );
+subject.next(JSON.stringify({ op: 'hello' }));
+\`\`\`
+
+*Wraps \`WebSocket\` from nodejs-websocket*
+\`\`\`typescript
+import { w3cwebsocket } from 'websocket';
+
+let socket = new WebSocketSubject({
+  url: 'ws://localhost:8081',
+  WebSocketCtor: w3cwebsocket
+});
+
+let subject = Observable.webSocket('ws://localhost:8081');
+subject.subscribe(
+   (msg) => console.log('message received: ' + msg),
+   (err) => console.log(err),
+   () => console.log('complete')
+ );
+subject.next(JSON.stringify({ op: 'hello' }));
+\`\`\``,
 	},
 };

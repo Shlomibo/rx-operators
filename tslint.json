@@ -55,6 +55,9 @@
         ],
         "member-ordering": [
             false
+        ],
+        "object-literal-key-quotes": [
+            "as-needed"
         ]
     },
     "rulesDirectory": []

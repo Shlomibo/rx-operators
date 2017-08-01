@@ -38,6 +38,8 @@ body {
 	}
 
 	.panel-heading {
+		cursor: row-resize;
+
 		h3 {
 			margin: 0;
 		}
@@ -219,6 +221,30 @@ body {
 	&.cat-inactive {
 		background-color: white;
 		border-color: lightgray;
+		color: gray;
+
+		&:hover {
+			color: gray;
+		}
+	}
+}
+
+@higher-order: #241f7a;
+@higher-order-border: black;
+.cat-higher-order {
+	background-color: @higher-order;
+	border-color: @higher-order-border;
+	color: #dbe085;
+
+	&:hover {
+		color: #dbe085;
+	}
+	&:hover {
+		color: #dbe085;
+	}
+	&.cat-inactive {
+		background-color: tint(@higher-order, 85%);;
+		border-color: tint(@higher-order-border, 80%);;
 		color: gray;
 
 		&:hover {

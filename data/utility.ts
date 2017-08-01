@@ -4,11 +4,23 @@ export const utilityOperators: Operators = {
 	do: {
 		categories: ['utility', 'debug'],
 		img: 'do.png',
-		url: 'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-do',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-do',
 		description: `Intercepts each emission on the source and runs a function, but returns
 an output which is identical to the source.
 
 \`do\` is useful for debugging your Observables for the correct values.
+
+\`\`\` typescript
+// Log values as they pass.
+anObservable
+  .do(x => console.log(x))
+  .map(x => x.y)
+  .do(x => {
+    // Can put breakpoint here...
+    console.log(x);
+  });
+\`\`\`
 
 > **Note**, while \`do\` may be used to produce side effects by your observable (otherwise than debugging),
 this is highly discouraged.  \

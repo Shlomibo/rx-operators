@@ -307,9 +307,9 @@ but not on the first emission, because there is no previous value in that case.`
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-mergeScan',
 		description: `Applies an accumulator function over the source Observable where the accumulator \
 function itself returns an Observable, then each intermediate Observable returned is \
-merged into the output Observable.  \
+merged into the output Observable.
 
-It's like scan, but the Observables returned by the accumulator are merged into the outer Observable.`,
+> It's like scan, but the Observables returned by the accumulator are merged into the outer Observable.`,
 	},
 
 	delay: {
@@ -383,14 +383,31 @@ on the provided *scheduler*.',
 	},
 
 	repeat: {
-		categories: ['transformation', 'completion'],
+		categories: ['transformation', 'completion', 'subscription'],
 		img: 'repeat.png',
 		playWithUrl: 'http://rxmarbles.com/#repeat',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-repeat',
-		description: `Returns an Observable that repeats the stream of items emitted by
-the source Observable at most \`count\` times.
+		description: `Returns an Observable that resubscribe to the source observable \`count\` times.
 
-***Note:*** A \`count\` of 0 will yield an empty Observable.`,
+***Note:*** A \`count\` of 0 will yield an empty Observable (as the source observable would not be
+subscribed at all).`,
+	},
+
+	repeatWhen: {
+		categories: ['transformation', 'completion', 'subscription'],
+		img: 'repeatWhen.png',
+		url:
+			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-repeatWhen',
+		description: `> Returns an Observable that resubscribe to the source observable
+after it completes, whenever an observable supplied by you, emits \`next\`.
+
+Gets a \`notifier\` function which receives an observable, that emits if and when the source
+observable \`complete\`, and returns an observable.
+
+When that observable emits \`next\` notification, the source observable is resubscribed.  \
+
+If that Observable calls \`complete\` or \`error\`, then the output observable would \`complete\` or \`error\`
+accordingliy.`,
 	},
 };
