@@ -102,7 +102,7 @@ export const categories = <CategoriesData>_({
 		description: 'Utility operators.',
 	},
 	'higher-order': {
-		type: 'effects',
+		type: 'usage',
 		description: 'Operator to use on higher-order observable',
 	},
 })
