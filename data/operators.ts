@@ -25,7 +25,7 @@ export interface OperatorData {
 
 const categories = <CategoryName[]>Object.keys(catDefinition);
 export type Operators = Record<string, OperatorData>;
-export const operators: Operators = {
+export const operators: Operators = _({
 	...combinationOperators,
 	...errorHandlingOperators,
 	...filteringOperators,
@@ -35,4 +35,11 @@ export const operators: Operators = {
 	...conditionalOperators,
 	...aggregationOprators,
 	...utilityOperators,
-};
+})
+	// Order operators by name
+	.toPairs<OperatorData>()
+	.orderBy([([name]) => name])
+	.reduce((operators, [name, data]) => {
+		operators[name] = data;
+		return operators;
+	}, {} as Operators);

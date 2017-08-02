@@ -80,6 +80,10 @@ export const categories = <CategoriesData>_({
 		type: 'usage',
 		description: 'Operators that transforms an observable',
 	},
+	'higher-order': {
+		type: 'effects',
+		description: 'Operator to use on higher-order observable',
+	},
 	aggregation: {
 		type: 'effects',
 		description: 'Do you want to produce a value from finite observable?',
@@ -100,10 +104,6 @@ export const categories = <CategoriesData>_({
 	utility: {
 		type: 'usage',
 		description: 'Utility operators.',
-	},
-	'higher-order': {
-		type: 'effects',
-		description: 'Operator to use on higher-order observable',
 	},
 })
 	.toPairs<CategoryData>()
