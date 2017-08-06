@@ -83,7 +83,7 @@
 					"background": {
 						"activeOnStart": true,
 						"endsPattern": "modules?$",
-						"beginsPattern": "."
+						"beginsPattern": "\\%\\d+"
 					}
 				},
 				{

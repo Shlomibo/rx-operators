@@ -16,11 +16,10 @@ import {
 export interface OperatorsProps {
 	operators: Operators;
 	categoryDisplay: Observable<DisplaySelection>;
-	search: Observable<string>;
+	search: string;
 }
 export function Operators({ operators, categoryDisplay, search }: OperatorsProps) {
 	categoryDisplay = categoryDisplay.share();
-	search = search.share();
 
 	const operatorsMarkup = _(operators)
 		.toPairs()
@@ -44,12 +43,11 @@ export function Operators({ operators, categoryDisplay, search }: OperatorsProps
 interface OperatorProps extends OperatorData {
 	name: string;
 	categoryDisplay: Observable<(categories: CategoryName[]) => boolean>;
-	search: Observable<string>;
+	search: string;
 }
 interface OperatorState {
 	collapsed: 'collapse' | '';
 	catDisplay: 'cat-hidden' | '';
-	display: 'hidden' | '';
 	description?: string;
 }
 class Operator extends RXComponent<OperatorProps, OperatorState> {
@@ -57,13 +55,11 @@ class Operator extends RXComponent<OperatorProps, OperatorState> {
 
 	constructor(props: OperatorProps) {
 		super(props);
+		const { categoryDisplay, search, name, categories, description } = props;
 		this.state = {
 			collapsed: 'collapse',
 			catDisplay: '',
-			display: '',
 		};
-
-		const { categoryDisplay, search, name, categories, description } = props;
 
 		const descriptionGeneration = mdToHtml(description).map(
 			descHtml => ({ description: descHtml } as StateUpdate<OperatorState>)
@@ -81,26 +77,16 @@ class Operator extends RXComponent<OperatorProps, OperatorState> {
 			.map(shouldDisplay => (shouldDisplay ? '' : 'cat-hidden'))
 			.map(catDisplay => ({ catDisplay } as StateUpdate<OperatorState>));
 
-		const searchHandling = search
-			.map(searchTerm => searchTerm.toLowerCase())
-			.map(searchTerm => name.toLowerCase().includes(searchTerm))
-			.distinctUntilChanged()
-			.map(shouldDisplay => (shouldDisplay ? '' : 'hidden'))
-			.map(display => ({ display } as StateUpdate<OperatorState>));
-
 		this.subscribe(
-			Observable.merge(
-				descriptionGeneration,
-				collapseHandling,
-				categoryHandling,
-				searchHandling
-			)
+			Observable.merge(descriptionGeneration, collapseHandling, categoryHandling)
 		);
 	}
 
 	public render() {
-		const { url, categories, img, name, playWithUrl } = this.props;
-		const { collapsed, catDisplay, display, description } = this.state;
+		const { url, categories, img, name, playWithUrl, search } = this.props;
+		const { collapsed, catDisplay, description } = this.state;
+		const display = name.toLowerCase().includes(search) ? '' : 'hidden';
+
 		const categoriesUI = _(categoriesData)
 			.keys()
 			.map((category: CategoryName) => (

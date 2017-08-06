@@ -1,6 +1,9 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import * as React from 'react';
+import 'rxjs/add/operator/switch';
+import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/shareReplay';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
@@ -8,6 +11,8 @@ import { Subject } from 'rxjs/Subject';
 import { Categories, CategoriesState, DataWithDisplay } from './categories';
 import { Operators } from './operators';
 import { Search } from './search';
+import { operators, Operators as OperatorsType } from '../data/operators';
+import { StateUpdate } from '../utils/reactive-react';
 import {
 	categories,
 	CategoryData,
@@ -16,7 +21,6 @@ import {
 	CategoryType,
 	initialDisplayOutOfName,
 } from '../data/categories';
-import { operators, Operators as OperatorsType } from '../data/operators';
 import {
 	RXComponent,
 	reactEventObserver,
@@ -27,9 +31,10 @@ export const CLS_CAT_INACTIVE = 'cat-inactive';
 
 export interface AppState {
 	isScrolled: boolean;
+	searchString: string;
 }
 export class App extends RXComponent<{}, AppState> {
-	private readonly _searchInput = reactEventObserver<string>();
+	private readonly _searchInput = reactEventObserver<Observable<string>>();
 	private readonly _categoryClicked = reactEventObserver<CategoryName>();
 	private readonly _categoriesState: Observable<CategoriesState>;
 	private readonly _operatorDisplay: Observable<DisplaySelection>;
@@ -38,6 +43,7 @@ export class App extends RXComponent<{}, AppState> {
 		super(props);
 		this.state = {
 			isScrolled: false,
+			searchString: '',
 		};
 
 		const categoriesStateStream = categoriesStateHandling(
@@ -79,25 +85,34 @@ export class App extends RXComponent<{}, AppState> {
 			}
 		);
 
+		const searchState = this._searchInput
+			.asObservable()
+			.switch()
+			.do(x => console.log(x))
+			.map(searchString => ({ searchString }));
+
 		// Streams to notify when the page is page is scrolled/at the top
-		const state = Observable.fromEvent(window, 'scroll')
+		const scrollState = Observable.fromEvent(window, 'scroll')
 			.map(() => $(document).scrollTop()! > 50)
 			.debounceTime(100)
 			.distinctUntilChanged()
 			.map(isScrolled => ({ isScrolled }));
-		this.subscribe(state);
+
+		this.subscribe(Observable.merge<StateUpdate<AppState>>(searchState, scrollState));
 	}
 
 	public render() {
-		const search = this._searchInput.asObservable().debounceTime(350);
+		const { searchString } = this.state;
+
 		const categoriesInitialization = _(categories)
 			.toPairs()
 			.map(([name, data]: [CategoryName, CategoryData]) => ({
 				name,
-				data: {
-					...data,
-					display: initialDisplayOutOfName(name).display,
-				} as DataWithDisplay,
+				data:
+					{
+						...data,
+						display: initialDisplayOutOfName(name).display,
+					} as DataWithDisplay,
 			}))
 			.reduce(
 				(state, { name, data }) => {
@@ -115,20 +130,20 @@ export class App extends RXComponent<{}, AppState> {
 				categoriesState={this._categoriesState}
 				operators={operators}
 				operatorDisplay={this._operatorDisplay}
-				searches={search}
+				searches={searchString}
 			/>
 		);
 	}
 }
 
 interface AppUIProps {
-	searched: (search: string) => void;
+	searched: (search: Observable<string>) => void;
 	categoryClicked: (category: CategoryName) => void;
 	categories: Record<CategoryName, DataWithDisplay>;
 	categoriesState: Observable<CategoriesState>;
 	operators: OperatorsType;
 	operatorDisplay: Observable<DisplaySelection>;
-	searches: Observable<string>;
+	searches: string;
 }
 function AppUI({
 	searched,
@@ -185,17 +200,19 @@ const typeOperatorSelection: Record<
 	CategoryType,
 	(selected: CategoryName[]) => DisplaySelection
 > = {
-	usage: selected => opCategories =>
-		_(opCategories)
-			.filter(category => categories[category].type === 'usage')
-			.some(opCategory => selected.includes(opCategory)),
-	effects: selected => opCategories =>
-		selected.length === EFFECTS_CATEGORIES_COUNT ||
-		selected.every(selectedCat => opCategories.includes(selectedCat)),
+	usage:
+		selected => opCategories =>
+			_(opCategories)
+				.filter(category => categories[category].type === 'usage')
+				.some(opCategory => selected.includes(opCategory)),
+	effects:
+		selected => opCategories =>
+			selected.length === EFFECTS_CATEGORIES_COUNT ||
+			selected.every(selectedCat => opCategories.includes(selectedCat)),
 };
 
 function categoriesStateHandling(
-	clicksSubject: ReactEventObserver<CategoryName>
+	clicksObserver: ReactEventObserver<CategoryName>
 ): Observable<CategoryState> {
 	// A function to create category-filter (a filtering function) from category-type
 	const byTypeFilter = (type: CategoryType) => (name: CategoryName) =>
@@ -214,7 +231,7 @@ function categoriesStateHandling(
 	};
 
 	// The category handling stream is created from the multicast subject
-	const catHandling = clicksSubject
+	const catHandling = clicksObserver
 		.asObservable()
 		// Scanned to update categories-state, based on clicked category
 		.scan(categoryHandling, categoriesState);
