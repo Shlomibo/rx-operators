@@ -32,11 +32,11 @@ export class Search extends RXComponent<SearchProps, SearchState> {
 		).mapTo(INIT_STATE);
 
 		const input = this._onInput.asObservable().map(value => ({ value })),
-			state = Observable.merge(input, reset).share();
+			statesObservable = Observable.merge(input, reset).share();
 
-		props.onInput(state.map(({ value }) => value));
+		props.onInput(statesObservable.map(({ value }) => value));
 
-		this.subscribe(state);
+		this.subscribe(statesObservable);
 	}
 
 	public render() {
