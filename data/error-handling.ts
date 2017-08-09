@@ -6,10 +6,49 @@ export const errorHandlingOperators: Operators = {
 		img: 'catch.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-catch',
-		description: `Catches errors on the observable to be handled by returning a new observable \
-or throwing an error.  \
+		description: `Catches errors on the source observable, and returning a (might be new) observable, \
+or throwing an error.
 
-This method gets the source observable, so you may resubscribe to it.`,
+This method sends the source observable to \`selector\` (\`catch\`\\\`s argument) as the second argument,
+so you may resubscribe to it.  \
+
+***Note:*** Forgetting to return the source observable would leave it unsubscibed.
+
+---
+
+#### Example
+
+\`\`\` typescript
+const errorHandlingObservable = Observable.throw(new Error('An error'))
+  .startWith('An item')
+  .catch((err, source) => {
+    console.warn(err.message);
+    return source;
+  });
+
+errorHandlingObservable.subscribe({
+  next: item => console.log(item),
+  error: err => console.error(err),
+  complete: () => console.log('Done!'),
+});
+\`\`\`
+Would print:
+
+info: \`An item\`  \
+
+warning: \`An error\`  \
+
+info: \`An item\`  \
+
+warning: \`An error\`  \
+
+info: \`An item\`  \
+
+warning: \`An error\`  \
+
+...
+
+*No* error messages, *nor* \`Done!\` would be logged..`,
 	},
 
 	retry: {

@@ -350,7 +350,10 @@ It's like delay, but the time span of the delay duration is determined by a seco
 as next emissions marked with their original types within \`Notification\` objects.  \
 
 It wraps *next*, *error* and *complete* emissions in \`Notification\` objects, \
-emitted as next on the output Observable.`,
+emitted as next on the output Observable.
+
+To undo the *materialization*, and having an observable of items instead of \`Notificaion\`s use
+[\`dematerialize\`](#dematerialize).`,
 	},
 
 	dematerialize: {
@@ -358,9 +361,10 @@ emitted as next on the output Observable.`,
 		img: 'dematerialize.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#instance-method-dematerialize',
-		description: `Converts an Observable of \`Notification\` objects into the emissions that they represent.  \
+		description: `Converts an Observable of \`Notification\` objects into the emissions that they represent.
 
-It unwraps \`Notification\` objects as actual *next*, *error* and *complete* emissions. The opposite of materialize.`,
+It unwraps \`Notification\` objects as actual *next*, *error* and *complete* emissions. The opposite of
+[\`materialize\`](#materialize).`,
 	},
 
 	subscribeOn: {
