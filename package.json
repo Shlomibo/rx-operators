@@ -11,6 +11,8 @@
   "author": "Shlomi Borovitz",
   "license": "ISC",
   "dependencies": {
+    "@cycle/dom": "^18.2.0",
+    "@cycle/rxjs-run": "^7.1.0",
     "bootstrap": "^3.3.7",
     "css-loader": "^0.28.5",
     "extract-loader": "^1.0.1",
