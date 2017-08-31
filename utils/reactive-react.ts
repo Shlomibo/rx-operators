@@ -70,7 +70,7 @@ export function reactEventObserver<T>(): ReactEventObserver<T> {
 				},
 			});
 		},
-	});
+	}) as ReactEventObserver<T>;
 
 	function observeEvent(event: T): void {
 		eventSubject.next(event);
