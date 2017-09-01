@@ -2,6 +2,7 @@ import * as ExtractText from 'extract-text-webpack-plugin';
 import * as ExtractHtml from 'html-webpack-plugin';
 import { resolve } from 'path';
 import { Configuration } from 'webpack';
+import * as Polyfills from 'core-js-webpack-plugin';
 
 const publicPath = resolve(__dirname, 'public');
 
@@ -21,9 +22,7 @@ const conf: Configuration = {
 		rules: [
 			{
 				test: /\.html$/,
-				use: [
-					{ loader: 'html-loader' },
-				],
+				use: [{ loader: 'html-loader' }],
 			},
 			{
 				test: /\.less$/,
@@ -79,6 +78,9 @@ const conf: Configuration = {
 		new ExtractHtml({
 			title: 'RX operators',
 			template: './index.html',
+		}),
+		new Polyfills({
+			modules: ['shim'],
 		}),
 	],
 	watchOptions: {

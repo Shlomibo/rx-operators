@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import 'rxjs/add/operator/let';
 import 'rxjs/add/operator/mergeMap';
 import { Observable } from 'rxjs/Observable';
-import { category, CategoryProps, CategorySinks } from './category';
+import { Category, CategoryProps, CategorySinks } from './category';
 import { CategoryData, CategoryName } from '../data/categories';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
@@ -18,7 +18,7 @@ export interface CategoriesSinks {
 	categoryClicks: Observable<CategoryName>;
 	DOM: Observable<VNode>;
 }
-export function categories(sources: CategoriesSources): CategoriesSinks {
+export function Categories(sources: CategoriesSources): CategoriesSinks {
 	const { categoryClicks, categoriesDOM } = intent(sources);
 
 	return {
@@ -47,7 +47,7 @@ function intent({ DOM, displayUpdates, categoryDisplay }: CategoriesSources): In
 					]
 				) => ({
 					name,
-					category: category({
+					category: Category({
 						DOM: categoriesDOM,
 						props: updates
 							.let(getCategoryUpdates(name))

@@ -10,7 +10,7 @@ export interface SearchSinks {
 	DOM: Observable<VNode>;
 	searches: Observable<string>;
 }
-export function search(sources: SearchSources): SearchSinks {
+export function Search(sources: SearchSources): SearchSinks {
 	const { search } = intent(sources);
 
 	const vdom = search.map(view);
