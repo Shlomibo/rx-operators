@@ -1,42 +1,51 @@
-import { DOMSource, li, VNode } from '@cycle/dom';
+import { DOMSource, ul, VNode } from '@cycle/dom';
 import * as _ from 'lodash';
 import 'rxjs/add/operator/let';
+import 'rxjs/add/operator/mapTo';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/combineAll';
 import { Observable } from 'rxjs/Observable';
 import { Category, CategoryProps, CategorySinks } from './category';
-import { CategoryData, CategoryName } from '../data/categories';
+import { CategoryData, CategoryName, categories } from '../data/categories';
+import { debug } from '../utils/index';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
 export type CategoriesState = Record<CategoryName, boolean>;
 
 export interface CategoriesSources {
 	categoryDisplay: Record<CategoryName, DataWithDisplay>;
-	displayUpdates: Observable<CategoriesState>;
+	categoriesState: Observable<CategoriesState>;
 	DOM: DOMSource;
 }
 export interface CategoriesSinks {
-	categoryClicks: Observable<CategoryName>;
 	DOM: Observable<VNode>;
+	clicks: Observable<CategoryName>;
 }
 export function Categories(sources: CategoriesSources): CategoriesSinks {
-	const { categoryClicks, categoriesDOM } = intent(sources);
+	const { categoriesDOM, clicks } = intent(sources);
 
 	return {
-		categoryClicks,
-		DOM: categoriesDOM.startWith(categoriesView()),
+		DOM: categoriesDOM.map(categoies => categoriesView(categoies)),
+		clicks,
 	};
 }
 
 interface Intentions {
-	categoryClicks: Observable<CategoryName>;
-	categoriesDOM: Observable<VNode>;
+	categoriesDOM: Observable<VNode[]>;
+	clicks: Observable<CategoryName>;
 }
-function intent({ DOM, displayUpdates, categoryDisplay }: CategoriesSources): Intentions {
-	const updates = displayUpdates.share();
+interface CategoriesSink {
+	name: CategoryName;
+	category: CategorySinks;
+}
+function intent({
+	DOM,
+	categoryDisplay,
+	categoriesState,
+}: CategoriesSources): Intentions {
+	const categoriesDOM = DOM.select('ul.container-fluid');
 
-	const categoriesDOM = DOM.select('li.container-fluid');
-
-	const categoriesSinks = Observable.from(
+	const categoriesSinks: Observable<CategoriesSink> = Observable.from(
 		_(categoryDisplay)
 			.toPairs()
 			.map(
@@ -49,7 +58,7 @@ function intent({ DOM, displayUpdates, categoryDisplay }: CategoriesSources): In
 					name,
 					category: Category({
 						DOM: categoriesDOM,
-						props: updates
+						props: categoriesState
 							.let(getCategoryUpdates(name))
 							.startWith(initialDisplay)
 							.distinctUntilChanged()
@@ -62,13 +71,16 @@ function intent({ DOM, displayUpdates, categoryDisplay }: CategoriesSources): In
 				})
 			)
 			.value()
-	);
+	).share();
 
 	return {
-		categoryClicks: categoriesSinks.mergeMap(({ name, category }) =>
+		categoriesDOM: categoriesSinks
+			.map(({ category }) => category.DOM)
+			.combineAll((...nodes: VNode[]) => nodes),
+
+		clicks: categoriesSinks.mergeMap(({ name, category }) =>
 			category.clicks.mapTo(name)
 		),
-		categoriesDOM: categoriesSinks.mergeMap(({ category }) => category.DOM),
 	};
 }
 function getCategoryUpdates(name: CategoryName) {
@@ -76,6 +88,6 @@ function getCategoryUpdates(name: CategoryName) {
 		updates.map(categories => categories[name]);
 }
 
-function categoriesView(): VNode {
-	return li('.container-fluid');
+function categoriesView(categories: VNode[]): VNode {
+	return ul('.container-fluid', {}, categories);
 }

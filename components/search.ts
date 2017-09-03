@@ -1,5 +1,7 @@
 import { div, DOMSource, input, span, VNode } from '@cycle/dom';
 import 'rxjs/add/observable/from';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/add/operator/filter';
 import { Observable } from 'rxjs/Observable';
 
 export interface SearchSources {
@@ -13,7 +15,7 @@ export interface SearchSinks {
 export function Search(sources: SearchSources): SearchSinks {
 	const { search } = intent(sources);
 
-	const vdom = search.map(view);
+	const vdom = search.map(searchView);
 
 	return {
 		DOM: vdom,
@@ -27,7 +29,8 @@ interface Intentions {
 function intent({ DOM, reset }: SearchSources): Intentions {
 	const searches = Observable.from(DOM.select('input').events('input'))
 		.map(ev => (ev.target as HTMLInputElement).value)
-		.debounceTime(250);
+		.debounceTime(250)
+		.startWith('');
 
 	const escapeClick = Observable.from(DOM.select('input').events('keydown'))
 		.map((ev: KeyboardEvent) => ev.key)
@@ -39,7 +42,7 @@ function intent({ DOM, reset }: SearchSources): Intentions {
 	};
 }
 
-function view(search: string): VNode {
+function searchView(search: string): VNode {
 	return div('.input-group', [
 		span('.input-group-addon', [span('.glyphicon.glyphicon-search')]),
 		input('.form-control', {

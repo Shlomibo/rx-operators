@@ -6,6 +6,7 @@ import 'rxjs/add/operator/mergeAll';
 import 'rxjs/add/operator/combineAll';
 import * as _ from 'lodash';
 import { Operator } from './operator';
+import { debug } from '../utils/index';
 
 export interface OperatorsSources {
 	DOM: DOMSource;

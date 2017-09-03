@@ -1,9 +1,11 @@
 import { a, code, div, DOMSource, h3, img, li, ul, VNode } from '@cycle/dom';
+import 'rxjs/add/observable/merge';
 import { Observable } from 'rxjs/Observable';
 import virtualizeHtml from 'snabbdom-virtualize/strings';
 import { categories, CategoryName } from '../data/categories';
 import { OperatorData } from '../data/operators';
 import { getParser } from '../markdown';
+import { debug } from '../utils/index';
 import {
 	classSelector,
 	ClassSelector,
@@ -92,7 +94,7 @@ function intent({
 	);
 
 	return {
-		uiProps: propsState,
+		uiProps: propsState.startWith(initialProps),
 	};
 }
 

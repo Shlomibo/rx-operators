@@ -1,8 +1,8 @@
-import { VNode, li, DOMSource } from '@cycle/dom';
-import { CategoryName } from '../data/categories';
-import { CLS_CAT_INACTIVE } from './app';
-import { Observable } from 'rxjs/Observable';
+import { DOMSource, li, VNode } from '@cycle/dom';
 import 'rxjs/add/operator/switchMap';
+import { Observable } from 'rxjs/Observable';
+import { CLS_CAT_INACTIVE } from './app';
+import { CategoryName } from '../data/categories';
 import { classSelector } from '../helpers/selectors';
 
 export interface CategoryProps {
@@ -34,9 +34,9 @@ function categoryView({ name, description, display }: CategoryProps): VNode {
 	const activation = display ? '' : classSelector(`.${CLS_CAT_INACTIVE}`);
 
 	return li(
-		'`.category.btn.cat-${name}${activation}`',
+		`.category.btn.cat-${name}${activation}`,
 		{
-			title: display,
+			title: name,
 		},
 		[name]
 	);

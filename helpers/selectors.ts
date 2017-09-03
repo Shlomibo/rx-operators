@@ -1,7 +1,7 @@
 export enum ClassSelectorEnum {}
 export type ClassSelector = '' | (string & ClassSelectorEnum);
 export enum IdSelectorEnum {}
-export type IdSelector = string & ClassSelectorEnum;
+export type IdSelector = string & IdSelectorEnum;
 
 export const isClassSelector = isSelector<ClassSelector>('\\.'),
 	classSelector = asSelector<ClassSelector>('.', isClassSelector),
@@ -12,7 +12,7 @@ function isSelector<T extends string>(regexPrefix: string) {
 	return function isSelector(selector: string): selector is T {
 		return (
 			typeof selector === 'string' &&
-			!!selector.match(new RegExp(String.raw`(${regexPrefix}[\w-_]*)?$`))
+			!!selector.match(new RegExp(String.raw`^(${regexPrefix}[\w-_]*)?$`))
 		);
 	};
 }
@@ -27,7 +27,7 @@ function asSelector<T extends string>(
 
 		selector = selector.trim().replace(/[^\w-_]/g, '-');
 
-		selector = prefix + selector[0] === '-' ? selector.substr(1) : selector;
+		selector = prefix + (selector[0] === '-' ? selector.substr(1) : selector);
 
 		if (!isSelector(selector)) {
 			throw new Error('Conversion to class selector failed');

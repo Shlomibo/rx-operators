@@ -2,12 +2,11 @@ import * as ExtractText from 'extract-text-webpack-plugin';
 import * as ExtractHtml from 'html-webpack-plugin';
 import { resolve } from 'path';
 import { Configuration } from 'webpack';
-import * as Polyfills from 'core-js-webpack-plugin';
 
 const publicPath = resolve(__dirname, 'public');
 
 const conf: Configuration = {
-	entry: ['./app.tsx'],
+	entry: ['./app.ts'],
 	context: __dirname,
 	output: {
 		filename: 'app.js',
@@ -51,7 +50,7 @@ const conf: Configuration = {
 				],
 			},
 			{
-				test: /\.(ts|tsx|js|jsx)$/,
+				test: /\.ts$/,
 				loader: 'ts-loader',
 				exclude: /node_modules/,
 			},
@@ -78,9 +77,6 @@ const conf: Configuration = {
 		new ExtractHtml({
 			title: 'RX operators',
 			template: './index.html',
-		}),
-		new Polyfills({
-			modules: ['shim'],
 		}),
 	],
 	watchOptions: {
