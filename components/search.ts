@@ -27,12 +27,12 @@ interface Intentions {
 	search: Observable<string>;
 }
 function intent({ DOM, reset }: SearchSources): Intentions {
-	const searches = Observable.from(DOM.select('input').events('input'))
+	const searches = Observable.from(DOM.select('.search').events('input'))
 		.map(ev => (ev.target as HTMLInputElement).value)
 		.debounceTime(250)
 		.startWith('');
 
-	const escapeClick = Observable.from(DOM.select('input').events('keydown'))
+	const escapeClick = Observable.from(DOM.select('.search').events('keydown'))
 		.map((ev: KeyboardEvent) => ev.key)
 		.filter(key => key === 'Escape');
 	const clearSearch = Observable.merge(reset, escapeClick).mapTo('');
@@ -43,11 +43,15 @@ function intent({ DOM, reset }: SearchSources): Intentions {
 }
 
 function searchView(search: string): VNode {
-	return div('.input-group', [
-		span('.input-group-addon', [span('.glyphicon.glyphicon-search')]),
-		input('.form-control', {
-			type: 'text',
-			value: search,
+	return div('.input-group', {}, [
+		span('.input-group-addon', {}, [span('.glyphicon.glyphicon-search')]),
+		input('.form-control.search', {
+			attrs: {
+				type: 'text',
+			},
+			props: {
+				value: search,
+			},
 		}),
 	]);
 }

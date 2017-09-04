@@ -11,6 +11,7 @@ import {
 	ClassSelector,
 	IdSelector,
 	idSelector,
+	joinClasses,
 } from '../helpers/selectors';
 
 export interface OperatorDataWithName extends OperatorData {
@@ -53,9 +54,9 @@ function intent({
 		id,
 		...operatorData,
 		description: parser.render(description),
-		displaySelector: '',
-		categoryDisplaySelector: '',
-		collapsedClass: classSelector('.collapse'),
+		isOperatorDisplayed: true,
+		isCategoryDisplayed: true,
+		isCollapsed: true,
 		categories: categoryNames.map(name => ({
 			name,
 			isActive: operatorCategories.has(name),
@@ -65,21 +66,19 @@ function intent({
 	const collapseState = Observable.from(
 		DOM.select(`${id} .panel-heading`).events('click')
 	).scan(
-		({ collapsedClass }) => ({
-			collapsedClass: collapsedClass === '' ? classSelector('.collapse') : '',
+		({ isCollapsed }) => ({
+			isCollapsed: !isCollapsed,
 		}),
 		initialProps
 	);
 	const catDisplayState = categoryDisplay
 		.map(shouldBeDisplayed => shouldBeDisplayed(categories))
 		.distinctUntilChanged()
-		.map(display => (display ? '' : classSelector('cat-hidden')))
-		.map(categoryDisplaySelector => ({ categoryDisplaySelector }));
+		.map(isCategoryDisplayed => ({ isCategoryDisplayed }));
 	const searchDisplayState = search
 		.map(search => !search || name.toLowerCase().includes(search))
 		.distinctUntilChanged()
-		.map(displayed => (displayed ? '' : classSelector('.hidden')))
-		.map(displaySelector => ({ displaySelector }));
+		.map(isOperatorDisplayed => ({ isOperatorDisplayed }));
 
 	const propsState = Observable.merge<Pick<OperatorProps, keyof OperatorProps>>(
 		collapseState,
@@ -105,10 +104,10 @@ interface OperatorProps {
 	description?: string;
 	img?: string;
 	playWithUrl?: string;
-	categoryDisplaySelector: ClassSelector;
-	displaySelector: ClassSelector;
+	isCategoryDisplayed: boolean;
+	isOperatorDisplayed: boolean;
 	categories: CategoryMarkerProps[];
-	collapsedClass: ClassSelector;
+	isCollapsed: boolean;
 }
 function operatorView({
 	id,
@@ -117,35 +116,47 @@ function operatorView({
 	description,
 	img,
 	playWithUrl,
-	categoryDisplaySelector,
-	displaySelector,
+	isCategoryDisplayed,
+	isOperatorDisplayed,
 	categories,
-	collapsedClass,
+	isCollapsed,
 }: OperatorProps): VNode {
 	return li(
-		`${id}.operator.panel.panel-default${categoryDisplaySelector}${displaySelector}`,
-		{},
+		`${id}.operator.panel.panel-default`,
+		{
+			key: name,
+			class: {
+				'cat-hidden': !isCategoryDisplayed,
+				hidden: !isOperatorDisplayed,
+			},
+		},
 		[
 			div('.panel-heading.container-fluid', {}, [
-				div('.col-sm-6.col-lg-5', {}, ul('.categories')),
-				h3(
-					'.col-sm-6.col-lg-7',
+				div(
+					'.col-sm-6.col-lg-5',
 					{},
+					ul('.categories', {}, categories.map(categoryMarker))
+				),
+				h3('.col-sm-6.col-lg-7', {}, [
 					a(
 						'',
 						{
-							href: url,
-							target: '_blank',
-							onClick: 'return false;',
+							props: {
+								href: url,
+								target: '_blank',
+							},
+							on: {
+								click: (ev: Event) => ev.preventDefault(),
+							},
 						},
 						code('', {}, name)
-					)
-				),
+					),
+				]),
 			]),
-
 			operatorDisplay({
 				html: description,
-				selector: classSelector(`panel-body${collapsedClass}`),
+				selector: classSelector('.panel-body'),
+				isCollapsed,
 				img,
 				playWithUrl,
 			}),
@@ -158,10 +169,10 @@ interface CategoryMarkerProps {
 	isActive: boolean;
 }
 function categoryMarker({ name, isActive }: CategoryMarkerProps): VNode {
-	const inactivation = isActive ? '' : classSelector('.cat-inactive');
-
-	return li(`.category.cat-${name}${inactivation}`, {
-		title: name,
+	return li(`.category.cat-${name}`, {
+		key: name,
+		class: { 'cat-inactive': !isActive },
+		props: { title: name },
 	});
 }
 
@@ -170,10 +181,12 @@ interface OperatorDescriptionProperties {
 	img?: string;
 	playWithUrl?: string;
 	selector?: ClassSelector;
+	isCollapsed: boolean;
 }
 function operatorDisplay({
 	html = '',
 	selector = '',
+	isCollapsed,
 	img: imgSource,
 	playWithUrl,
 }: OperatorDescriptionProperties): VNode {
@@ -182,25 +195,32 @@ function operatorDisplay({
 	const imgUI =
 		imgSource &&
 		img('.col-sm-6.image-rounded', {
-			src: `./img/${imgSource}`,
+			props: { src: `./img/${imgSource}` },
 		});
 	const playWithLink =
 		playWithUrl &&
 		a(
 			'',
 			{
-				href: playWithUrl,
-				title: 'Play with operator on RxJS Marbles',
-				target: '_blank',
+				props: {
+					href: playWithUrl,
+					title: 'Play with operator on RxJS Marbles',
+					target: '_blank',
+				},
 			},
-			imgUI
+			[imgUI]
 		);
 
-	const descriptionUI = !!html ? [virtualizeHtml(html)] : [];
+	const descriptionUI = !!html ? virtualizeHtml(html) : [];
 	const imgChildren = !!imgUI ? [playWithLink || imgUI] : [];
 
-	return div(`.operator-desc.container-fluid${selector}`, {}, [
-		div(`.col-sm-${descColCount}`, {}, descriptionUI),
-		imgChildren,
-	]);
+	return div(
+		`.operator-desc.container-fluid${selector}`,
+		{
+			class: {
+				collapse: isCollapsed,
+			},
+		},
+		[div(`.col-sm-${descColCount}`, {}, descriptionUI), ...imgChildren]
+	);
 }

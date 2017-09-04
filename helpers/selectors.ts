@@ -5,15 +5,14 @@ export type IdSelector = string & IdSelectorEnum;
 
 export const isClassSelector = isSelector<ClassSelector>('\\.'),
 	classSelector = asSelector<ClassSelector>('.', isClassSelector),
+	joinClasses = joinSelectors<ClassSelector>('.', classSelector),
 	isIdSelector = isSelector<IdSelector>('#'),
 	idSelector = asSelector<IdSelector>('#', isIdSelector);
 
 function isSelector<T extends string>(regexPrefix: string) {
+	const prefixRX = new RegExp(String.raw`^(${regexPrefix}[\w-_]*)?$`);
 	return function isSelector(selector: string): selector is T {
-		return (
-			typeof selector === 'string' &&
-			!!selector.match(new RegExp(String.raw`^(${regexPrefix}[\w-_]*)?$`))
-		);
+		return typeof selector === 'string' && !!selector.match(prefixRX);
 	};
 }
 function asSelector<T extends string>(
@@ -34,5 +33,13 @@ function asSelector<T extends string>(
 		}
 
 		return selector;
+	};
+}
+function joinSelectors<T extends string>(
+	prefix: string,
+	createSelector: (selector: string) => T
+) {
+	return function joinSelectors(...selectors: string[]) {
+		return selectors.map(selector => createSelector(selector)).join('') as T;
 	};
 }

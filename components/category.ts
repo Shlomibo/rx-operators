@@ -31,12 +31,12 @@ export function Category({ DOM, props }: CategorySources): CategorySinks {
 }
 
 function categoryView({ name, description, display }: CategoryProps): VNode {
-	const activation = display ? '' : classSelector(`.${CLS_CAT_INACTIVE}`);
-
 	return li(
-		`.category.btn.cat-${name}${activation}`,
+		`.category.btn.cat-${name}`,
 		{
-			title: name,
+			key: name,
+			class: { [CLS_CAT_INACTIVE]: !display },
+			props: { title: name },
 		},
 		[name]
 	);
