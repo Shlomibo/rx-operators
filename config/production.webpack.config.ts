@@ -1,0 +1,11 @@
+import * as UglifyPlugin from 'uglifyjs-webpack-plugin';
+import { Configuration } from 'webpack';
+
+const config: Partial<Configuration> = {
+	plugins: [
+		new UglifyPlugin({
+			uglifyOptions: { ecma: 8 },
+		}),
+	],
+};
+export = config;

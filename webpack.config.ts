@@ -1,12 +1,13 @@
 import * as ExtractText from 'extract-text-webpack-plugin';
 import * as ExtractHtml from 'html-webpack-plugin';
 import { resolve } from 'path';
-import { Configuration } from 'webpack';
+import { Configuration, EnvironmentPlugin } from 'webpack';
+import * as confMerge from 'webpack-merge';
 
 const publicPath = resolve(__dirname, 'public');
 
-const conf: Configuration = {
-	entry: ['./app.tsx'],
+const baseConf: Configuration = {
+	entry: ['./app.ts'],
 	context: __dirname,
 	output: {
 		filename: 'app.js',
@@ -21,9 +22,7 @@ const conf: Configuration = {
 		rules: [
 			{
 				test: /\.html$/,
-				use: [
-					{ loader: 'html-loader' },
-				],
+				use: [{ loader: 'html-loader' }],
 			},
 			{
 				test: /\.less$/,
@@ -52,7 +51,7 @@ const conf: Configuration = {
 				],
 			},
 			{
-				test: /\.(ts|tsx|js|jsx)$/,
+				test: /\.ts$/,
 				loader: 'ts-loader',
 				exclude: /node_modules/,
 			},
@@ -71,7 +70,6 @@ const conf: Configuration = {
 			},
 		],
 	},
-	devtool: 'cheap-module-source-map',
 	plugins: [
 		new ExtractText({
 			filename: 'style.css',
@@ -80,10 +78,16 @@ const conf: Configuration = {
 			title: 'RX operators',
 			template: './index.html',
 		}),
+		new EnvironmentPlugin({
+			NODE_ENV: 'development',
+			DEBUG: true,
+		}),
 	],
-	watchOptions: {
-		aggregateTimeout: 1500,
-		ignored: /node_modules/,
-	},
 };
-export default conf;
+export default function(env: string, argv: string[]) {
+	env = env || 'development';
+	// tslint:disable-next-line:no-var-requires
+	const envConf = require(`./config/${env}.webpack.config`);
+
+	return confMerge(baseConf, envConf);
+}
