@@ -1,48 +1,64 @@
 import { div, DOMSource, input, span, VNode } from '@cycle/dom';
+import isolate from '@cycle/isolate';
 import 'rxjs/add/observable/from';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/filter';
 import { Observable } from 'rxjs/Observable';
+import { Action, ActionDescriptor, Reducer, StateSource } from '../state/action';
+import { searchActions, searchReducer, SearchState } from '../state/search';
 
 export interface SearchSources {
 	DOM: DOMSource;
-	reset: Observable<any>;
+	state: StateSource<SearchState>;
 }
-export interface SearchSinks {
+interface SearchSinks {
 	DOM: Observable<VNode>;
-	searches: Observable<string>;
+	state: Observable<Reducer<SearchState>>;
 }
-export function Search(sources: SearchSources): SearchSinks {
+
+interface IsolatedSources {
+	DOM: DOMSource;
+	state: StateSource<any>;
+}
+export interface IsolatedSinks {
+	DOM: Observable<VNode>;
+	state: Observable<Reducer<any>>;
+}
+export type SearchComponent = (sources: IsolatedSources) => IsolatedSinks;
+export function makeSearch(scope: string | object): SearchComponent {
+	return isolate(Search, scope);
+}
+function Search(sources: SearchSources): SearchSinks {
 	const { search } = intent(sources);
 
-	const vdom = search.map(searchView);
+	const vdom = sources.state.state$.map(searchView);
 
 	return {
 		DOM: vdom,
-		searches: search,
+		state: search.let(searchReducer),
 	};
 }
 
 interface Intentions {
-	search: Observable<string>;
+	search: Observable<Action<any>>;
 }
-function intent({ DOM, reset }: SearchSources): Intentions {
+function intent({ DOM, state }: SearchSources): Intentions {
 	const searches = Observable.from(DOM.select('.search').events('input'))
 		.map(ev => (ev.target as HTMLInputElement).value)
 		.debounceTime(250)
-		.startWith('');
+		.map(search => searchActions.search(search));
 
-	const escapeClick = Observable.from(DOM.select('.search').events('keydown'))
+	const reset = Observable.from(DOM.select('.search').events('keydown'))
 		.map((ev: KeyboardEvent) => ev.key)
-		.filter(key => key === 'Escape');
-	const clearSearch = Observable.merge(reset, escapeClick).mapTo('');
+		.filter(key => key === 'Escape')
+		.mapTo(searchActions.reset());
 
 	return {
-		search: Observable.merge(searches, clearSearch),
+		search: Observable.merge<Action<any>>(searches, reset),
 	};
 }
 
-function searchView(search: string): VNode {
+function searchView({ search }: SearchState): VNode {
 	return div('.input-group', {}, [
 		span('.input-group-addon', {}, [span('.glyphicon.glyphicon-search')]),
 		input('.form-control.search', {

@@ -12,17 +12,15 @@ export interface CategoryProps {
 }
 export interface CategorySources {
 	DOM: DOMSource;
-	props: Observable<CategoryProps>;
+	props: CategoryProps;
 }
 export interface CategorySinks {
-	DOM: Observable<VNode>;
+	DOM: VNode;
 	clicks: Observable<any>;
 }
 export function Category({ DOM, props }: CategorySources): CategorySinks {
-	const vdom = props.map(categoryView);
-	const clicks = props.switchMap(({ name }) =>
-		Observable.from(DOM.select(`.cat-${name}`).events('click'))
-	);
+	const vdom = categoryView(props);
+	const clicks = Observable.from(DOM.select(`.cat-${props.name}`).events('click'));
 
 	return {
 		DOM: vdom,

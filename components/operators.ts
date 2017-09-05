@@ -1,30 +1,51 @@
 import { VNode, ul, DOMSource } from '@cycle/dom';
 import { Observable } from 'rxjs/Observable';
 import { DisplaySelection } from './app';
-import { Operators, OperatorData } from '../data/operators';
+import { Operators as OperatorsType, OperatorData } from '../data/operators';
 import 'rxjs/add/operator/mergeAll';
 import 'rxjs/add/operator/combineAll';
 import * as _ from 'lodash';
 import { Operator } from './operator';
 import { debug } from '../utils/index';
+import { StateSource, select, BANG } from '../state/action';
+import { Reducer } from 'cycle-onionify';
+import isolate from '@cycle/isolate';
 
-export interface OperatorsSources {
-	DOM: DOMSource;
-	categoryDisplay: Observable<DisplaySelection>;
-	search: Observable<string>;
-	operators: Operators;
+export interface OperatorsState {
+	search: string;
+	categoryDisplay: DisplaySelection;
 }
-export interface OperatorsSinks {
+
+export interface IsolatedSources {
+	DOM: DOMSource;
+	state: StateSource<any>;
+	operators: OperatorsType;
+}
+export interface IsolatedSinks {
 	DOM: Observable<VNode>;
 }
-export function Operators({
+export type OperatorsComponent = (sources: IsolatedSources) => IsolatedSinks;
+export function makeOperators(scope: string | object): OperatorsComponent {
+	return isolate(Operators, scope);
+}
+
+interface OperatorsSources {
+	DOM: DOMSource;
+	state: StateSource<OperatorsState>;
+	operators: OperatorsType;
+}
+interface OperatorsSinks {
+	DOM: Observable<VNode>;
+}
+
+function Operators({
 	DOM,
-	categoryDisplay,
-	search,
+	state: stateSource,
 	operators,
 }: OperatorsSources): OperatorsSinks {
-	categoryDisplay = categoryDisplay.share();
-	search = search.share();
+	const state = stateSource.state$.share(),
+		categoryDisplay = state.let(select('categoryDisplay')).let(BANG),
+		search = state.let(select('search')).let(BANG);
 
 	return {
 		DOM: Observable.from(

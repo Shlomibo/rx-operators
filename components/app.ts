@@ -4,12 +4,15 @@ import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/observable/empty';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { Categories, CategoriesState, DataWithDisplay } from './categories';
-import { Operators } from './operators';
-import { Search } from './search';
-import { categoriesStateHandling, typeOperatorSelection } from '../app-logic';
+import { makeCategories, DataWithDisplay } from './categories';
+import { makeOperators, OperatorsState } from './operators';
+import { makeSearch } from './search';
 import { operators, Operators as OperatorsType } from '../data/operators';
+import { Reducer, StateReducers, StateSource, simpleLens } from '../state/action';
+import { AppState } from '../state/app';
+import { debug } from '../utils/index';
 import { mergedObservables } from '../utils/observable-merger';
+import { Lens } from 'cycle-onionify';
 import {
 	CategoryName,
 	categories,
@@ -23,88 +26,84 @@ export const CLS_CAT_INACTIVE = 'cat-inactive';
 export type DisplaySelection = (categories: CategoryName[]) => boolean;
 export interface AppSources {
 	DOM: DOMSource;
+	state: StateSource<AppState>;
 }
 export interface AppSinks {
 	DOM: Observable<VNode>;
+	state: Observable<Reducer<AppState>>;
 }
 export function App(sources: AppSources): AppSinks {
-	const catStateInit = _(categories)
-		.toPairs()
-		.map(([name, data]: [CategoryName, CategoryData]) => ({
-			name,
-			data: {
-				...data,
-				display: initialDisplayOutOfName(name).display,
-			} as DataWithDisplay,
-		}))
-		.reduce(
-			(state, { name, data }) => {
-				state[name] = data;
-				return state;
-			},
-			({} as any) as CategoriesDataAndState
-		);
-
-	const { uiProps } = intent(sources, catStateInit);
+	const { uiProps, states } = intent(sources);
 
 	return {
 		DOM: uiProps.map(appView),
+		state: states,
+	};
+}
+
+const Categories = makeCategories({
+	DOM: null,
+	state: simpleLens<AppState, 'categories'>('categories'),
+});
+const Search = makeSearch({
+	DOM: null,
+	state: simpleLens<AppState, 'search'>('search'),
+});
+const opStateLens: Lens<AppState, OperatorsState> = {
+		get: state => state && opState(state),
+		set: (state, opState) => (opState && mergeOpState(state, opState)) || state,
+	},
+	Operators = makeOperators({
+		DOM: null,
+		state: opStateLens,
+	});
+
+function opState({
+	search: { search },
+	categories: { displaySelection },
+}: AppState): OperatorsState {
+	return {
+		search,
+		categoryDisplay: displaySelection,
+	};
+}
+function mergeOpState(state: AppState | undefined, opState: OperatorsState): AppState {
+	const { search, categories } = state || ({} as Partial<AppState>);
+
+	return {
+		...state as AppState,
+		search: {
+			...search,
+			search: opState.search,
+		},
+		categories: {
+			...categories as AppState['categories'],
+			displaySelection: opState.categoryDisplay,
+		},
 	};
 }
 
 type CategoriesDataAndState = Record<CategoryName, DataWithDisplay>;
 interface Intentions {
 	uiProps: Observable<AppProps>;
+	states: Observable<Reducer<AppState>>;
 }
-function intent({ DOM }: AppSources, catStateInit: CategoriesDataAndState): Intentions {
-	const { observable: catClicks, merger: mergeCategoryClicks } = mergedObservables<
-		CategoryName
-	>();
+function intent(sources: AppSources): Intentions {
+	const { DOM, state } = sources;
 
-	const catState = categoriesStateHandling(catClicks);
+	const statesSource = state.state$.filter(
+		state => !!state && Object.keys(state).length > 0
+	);
 
-	const displayUpdates = catState.map(({ active, effects, usage }) => {
-		switch (active) {
-			case 'effects': {
-				usage = usage.map(({ name }) => ({ name, display: false }));
-				break;
-			}
-			case 'usage': {
-				effects = effects.map(({ name }) => ({ name, display: false }));
-				break;
-			}
-			default: {
-				throw new Error('Unknow category type');
-			}
-		}
+	const { DOM: categoriesDOMSink, state: catStates } = Categories(sources);
 
-		return _(effects).concat(usage).reduce((state, { name, display }) => {
-			state[name] = display;
-			return state;
-		}, ({} as any) as CategoriesState);
-	});
-	const { DOM: categoriesDOMSink, clicks } = Categories({
-		DOM,
-		categoryDisplay: catStateInit,
-		categoriesState: displayUpdates,
-	});
-	mergeCategoryClicks(clicks);
-
-	const { DOM: searchDOMSink, searches } = Search({ DOM, reset: Observable.empty() });
+	const { DOM: searchDOMSink, state: searchStates } = Search(sources);
 	const { DOM: operatorsDOMSink } = Operators({
-		DOM,
+		...sources,
 		operators,
-		categoryDisplay: catState.map(({ active: activeType, ...categories }) => {
-			const activeCategories = categories[activeType];
-			const selectedCategories = _(activeCategories)
-				.filter(({ display }) => display)
-				.map(({ name }) => name)
-				.value();
-
-			return typeOperatorSelection[activeType](selectedCategories);
-		}),
-		search: searches,
 	});
+
+	const states = Observable.merge(searchStates, catStates);
 
 	return {
 		uiProps: Observable.combineLatest(
@@ -117,6 +116,8 @@ function intent({ DOM }: AppSources, catStateInit: CategoriesDataAndState): Inte
 				searchView,
 			})
 		),
+
+		states,
 	};
 }
 

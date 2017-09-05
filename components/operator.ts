@@ -1,5 +1,6 @@
 import { a, code, div, DOMSource, h3, img, li, ul, VNode } from '@cycle/dom';
 import 'rxjs/add/observable/merge';
+import 'rxjs/add/operator/scan';
 import { Observable } from 'rxjs/Observable';
 import virtualizeHtml from 'snabbdom-virtualize/strings';
 import { categories, CategoryName } from '../data/categories';
