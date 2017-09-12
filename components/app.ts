@@ -8,9 +8,13 @@ import { makeCategories, DataWithDisplay } from './categories';
 import { makeOperators, OperatorsState } from './operators';
 import { makeSearch } from './search';
 import { operators, Operators as OperatorsType } from '../data/operators';
-import { Reducer, StateReducers, StateSource, simpleLens } from '../state/action';
+import {
+	Reducer,
+	StateReducers,
+	StateSource,
+	simpleLens,
+} from '../state/action';
 import { AppState } from '../state/app';
-import { debug } from '../utils/index';
 import { mergedObservables } from '../utils/observable-merger';
 import { Lens } from 'cycle-onionify';
 import {
@@ -51,7 +55,8 @@ const Search = makeSearch({
 });
 const opStateLens: Lens<AppState, OperatorsState> = {
 		get: state => state && opState(state),
-		set: (state, opState) => (opState && mergeOpState(state, opState)) || state,
+		set: (state, opState) =>
+			(opState && mergeOpState(state, opState)) || state,
 	},
 	Operators = makeOperators({
 		DOM: null,
@@ -67,7 +72,10 @@ function opState({
 		categoryDisplay: displaySelection,
 	};
 }
-function mergeOpState(state: AppState | undefined, opState: OperatorsState): AppState {
+function mergeOpState(
+	state: AppState | undefined,
+	opState: OperatorsState
+): AppState {
 	const { search, categories } = state || ({} as Partial<AppState>);
 
 	return {
@@ -126,7 +134,11 @@ interface AppProps {
 	operatorsView: VNode;
 	searchView: VNode;
 }
-function appView({ categoriesView, operatorsView, searchView }: AppProps): VNode {
+function appView({
+	categoriesView,
+	operatorsView,
+	searchView,
+}: AppProps): VNode {
 	return div('', {}, [
 		nav('.navbar.navbar-default.navbar-fixed-top', {}, [
 			div('.container', {}, [

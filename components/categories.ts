@@ -7,10 +7,23 @@ import 'rxjs/add/operator/mapTo';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/shareReplay';
 import { Observable } from 'rxjs/Observable';
-import { Category, CategoryProps, CategorySinks, CategorySources } from './category';
-import { Action, ActionDescriptor, Reducer, StateSource } from '../state/action';
-import { categoriesReducer, CategoriesState, categoryActions } from '../state/categories';
-import { debug } from '../utils/index';
+import {
+	Category,
+	CategoryProps,
+	CategorySinks,
+	CategorySources,
+} from './category';
+import {
+	Action,
+	ActionDescriptor,
+	Reducer,
+	StateSource,
+} from '../state/action';
+import {
+	categoriesReducer,
+	CategoriesState,
+	categoryActions,
+} from '../state/categories';
 import {
 	CategoryData,
 	CategoryName,
@@ -63,31 +76,23 @@ function intent({ DOM, state }: CategoriesSources): Intentions {
 	const categoriesDOM = DOM.select('ul.container-fluid');
 
 	const categoriesSinks: Observable<CategoriesSink[]> = state.state$
-		.let(debug('cat states: '))
 		.filter(state => !!state)
-		.let(debug('cat states with state: '))
 		.map(displayOutOfState)
 		.map(categoryDisplay =>
 			_(categoryDisplay)
 				.toPairs()
-				.map(
-					(
-						[name, { description, display: initialDisplay }]: [
-							CategoryName,
-							DataWithDisplay
-						]
-					) => ({
-						name,
-						category: Category({
-							DOM: categoriesDOM,
-							props: {
-								name,
-								display: categoryDisplay[name].display,
-								description: categoryDisplay[name].description,
-							},
-						}),
-					})
-				)
+				.map(([ name, { description, display: initialDisplay }
+				]: [CategoryName, DataWithDisplay]) => ({
+					name,
+					category: Category({
+						DOM: categoriesDOM,
+						props: {
+							name,
+							display: categoryDisplay[name].display,
+							description: categoryDisplay[name].description,
+						},
+					}),
+				}))
 				.value()
 		)
 		.shareReplay();
@@ -98,10 +103,9 @@ function intent({ DOM, state }: CategoriesSources): Intentions {
 		),
 
 		clicks: categoriesSinks
-			.let(debug('cat-click-sink'))
 			.switchMap(sinks =>
 				Observable.from(sinks).mergeMap(({ name, category }) =>
-					category.clicks.mapTo(name).let(debug('cat click: '))
+					category.clicks.mapTo(name)
 				)
 			)
 			.map(name => categoryActions.categoryClicked(name)),
@@ -114,7 +118,10 @@ function displayOutOfState({
 }: CategoriesState): Record<CategoryName, DataWithDisplay> {
 	return _(effects).concat(usage).map(withCatData).reduce((
 		catDisplay,
-		[name, dataWithDisplay]
+		[
+			name,
+			dataWithDisplay,
+		]
 	) => {
 		catDisplay[name] = dataWithDisplay;
 

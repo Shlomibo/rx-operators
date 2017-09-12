@@ -6,7 +6,6 @@ import 'rxjs/add/operator/mergeAll';
 import 'rxjs/add/operator/combineAll';
 import * as _ from 'lodash';
 import { Operator } from './operator';
-import { debug } from '../utils/index';
 import { StateSource, select, BANG } from '../state/action';
 import { Reducer } from 'cycle-onionify';
 import isolate from '@cycle/isolate';
@@ -51,7 +50,8 @@ function Operators({
 		DOM: Observable.from(
 			_(operators)
 				.toPairs()
-				.map(([name, data]: [string, OperatorData]) => ({
+				.map(([ name, data
+				]: [string, OperatorData]) => ({
 					name,
 					...data,
 				}))

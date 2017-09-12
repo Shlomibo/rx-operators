@@ -6,7 +6,6 @@ import virtualizeHtml from 'snabbdom-virtualize/strings';
 import { categories, CategoryName } from '../data/categories';
 import { OperatorData } from '../data/operators';
 import { getParser } from '../markdown';
-import { debug } from '../utils/index';
 import {
 	classSelector,
 	ClassSelector,
@@ -81,11 +80,9 @@ function intent({
 		.distinctUntilChanged()
 		.map(isOperatorDisplayed => ({ isOperatorDisplayed }));
 
-	const propsState = Observable.merge<Pick<OperatorProps, keyof OperatorProps>>(
-		collapseState,
-		catDisplayState,
-		searchDisplayState
-	).scan(
+	const propsState = Observable.merge<
+		Pick<OperatorProps, keyof OperatorProps>
+	>(collapseState, catDisplayState, searchDisplayState).scan(
 		(state, update) => ({
 			...state,
 			...update,
@@ -209,11 +206,17 @@ function operatorDisplay({
 					target: '_blank',
 				},
 			},
-			[imgUI]
+			[
+				imgUI,
+			]
 		);
 
 	const descriptionUI = !!html ? virtualizeHtml(html) : [];
-	const imgChildren = !!imgUI ? [playWithLink || imgUI] : [];
+	const imgChildren = !!imgUI
+		? [
+				playWithLink || imgUI,
+			]
+		: [];
 
 	return div(
 		`.operator-desc.container-fluid${selector}`,
@@ -222,6 +225,9 @@ function operatorDisplay({
 				collapse: isCollapsed,
 			},
 		},
-		[div(`.col-sm-${descColCount}`, {}, descriptionUI), ...imgChildren]
+		[
+			div(`.col-sm-${descColCount}`, {}, descriptionUI),
+			...imgChildren,
+		]
 	);
 }
