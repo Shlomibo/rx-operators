@@ -110,8 +110,8 @@
 					],
 					"background": {
 						"activeOnStart": true,
-						"endsPattern": ".",
-						"beginsPattern": "modules?$"
+						"endsPattern": "modules?$",
+						"beginsPattern": "^\\s{1,2}\\d+%$"
 					}
 				}
 			]

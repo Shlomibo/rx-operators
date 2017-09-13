@@ -17,6 +17,7 @@ import {
 import { AppState } from '../state/app';
 import { mergedObservables } from '../utils/observable-merger';
 import { Lens } from 'cycle-onionify';
+import { debug } from '../utils/index';
 import {
 	CategoryName,
 	categories,
@@ -111,6 +112,13 @@ function intent(sources: AppSources): Intentions {
 		operators,
 	});
 
+	const shrinkNav = Observable.fromEvent(window, 'scroll')
+		.debounceTime(100)
+		.map(ev => document.documentElement.scrollTop)
+		.map(scroll => scroll > 50)
+		.distinctUntilChanged()
+		.startWith(false);
+
 	const states = Observable.merge(searchStates, catStates);
 
 	return {
@@ -118,10 +126,12 @@ function intent(sources: AppSources): Intentions {
 			categoriesDOMSink,
 			operatorsDOMSink,
 			searchDOMSink,
-			(categoriesView, operatorsView, searchView) => ({
+			shrinkNav,
+			(categoriesView, operatorsView, searchView, isScrolled) => ({
 				categoriesView,
 				operatorsView,
 				searchView,
+				isScrolled,
 			})
 		),
 
@@ -133,20 +143,30 @@ interface AppProps {
 	categoriesView: VNode;
 	operatorsView: VNode;
 	searchView: VNode;
+	isScrolled: boolean;
 }
 function appView({
 	categoriesView,
 	operatorsView,
 	searchView,
+	isScrolled,
 }: AppProps): VNode {
 	return div('', {}, [
-		nav('.navbar.navbar-default.navbar-fixed-top', {}, [
-			div('.container', {}, [
-				h5('.col-md-8', {}, 'RX operators'),
-				div('.col-md-4', {}, searchView),
-			]),
-			div('.categories', {}, categoriesView),
-		]),
+		nav(
+			'.navbar.navbar-default.navbar-fixed-top',
+			{
+				class: {
+					shrinked: isScrolled,
+				},
+			},
+			[
+				div('.container', {}, [
+					h5('.col-md-8', {}, 'RX operators'),
+					div('.col-md-4', {}, searchView),
+				]),
+				div('.categories', {}, categoriesView),
+			]
+		),
 		main('', {}, operatorsView),
 	]);
 }
