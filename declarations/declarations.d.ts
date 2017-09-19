@@ -6,3 +6,5 @@ declare module 'markdown-it-sup';
 
 declare module 'core-js-webpack-plugin';
 declare module 'uglifyjs-webpack-plugin';
+
+declare module 'favicons-webpack-plugin';

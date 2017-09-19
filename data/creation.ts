@@ -2,7 +2,9 @@ import { Operators } from './operators';
 
 export const creationOperators: Operators = {
 	bindCallback: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-bindCallback',
 		description: `If you want to consume node's callbacks, use \
@@ -24,7 +26,9 @@ After the *value* is emitted, the observable is **complete**.`,
 	},
 
 	bindNodeCallback: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-bindNodeCallback',
 		description: `It's just like [\`bindCallback\`](#bindCallback), but the callback is expected \
@@ -46,7 +50,10 @@ After the *value* is emitted, the observable is **complete**.`,
 	},
 
 	create: {
-		categories: ['creation', 'subscription'],
+		categories: [
+			'creation',
+			'subscription',
+		],
 		img: 'create.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-create',
@@ -58,7 +65,10 @@ any resources consumed when subscribed, and may cancel ongoing operations.`,
 	},
 
 	defer: {
-		categories: ['creation', 'subscription'],
+		categories: [
+			'creation',
+			'subscription',
+		],
 		img: 'defer.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-defer',
@@ -75,7 +85,9 @@ same Observable, in fact each subscriber gets its own individual Observable.
 	},
 
 	empty: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		img: 'empty.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-empty',
@@ -87,7 +99,9 @@ It can be used for composing with other Observables, such as in a [\`mergeMap\`]
 	},
 
 	from: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		img: 'from.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-from',
@@ -105,7 +119,9 @@ converted through this operator.
 	},
 
 	fromEvent: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		img: 'fromEvent.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-fromEvent',
@@ -118,7 +134,10 @@ and removed when the Subscription is unsubscribed.`,
 	},
 
 	fromEventPattern: {
-		categories: ['creation', 'subscription'],
+		categories: [
+			'creation',
+			'subscription',
+		],
 		img: 'fromEventPattern.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-fromEventPattern',
@@ -134,7 +153,9 @@ the Subscription is unsubscribed.
 	},
 
 	fromPromise: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-fromPromise',
 		description: `Converts an ES2015 Promise or a Promises/A+ spec compliant Promise to an Observable.
@@ -146,7 +167,10 @@ If the Promise is rejected, then the output Observable emits the corresponding E
 	},
 
 	interval: {
-		categories: ['creation', 'time'],
+		categories: [
+			'creation',
+			'time',
+		],
 		img: 'interval.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-interval',
@@ -157,7 +181,9 @@ The first emission is not sent immediately, but only after the first period has 
 	},
 
 	never: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		img: 'never.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-never',
@@ -177,7 +203,10 @@ Subscriptions need to be manually disposed.
 	},
 
 	of: {
-		categories: ['creation', 'data'],
+		categories: [
+			'creation',
+			'data',
+		],
 		img: 'of.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-of',
@@ -190,7 +219,9 @@ It can be used for composing with other Observables, such as with [\`concat\`](#
 	},
 
 	range: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		img: 'range.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-range',
@@ -201,7 +232,10 @@ the range and the \`count\` of emitted numbers.`,
 	},
 
 	throw: {
-		categories: ['creation', 'error'],
+		categories: [
+			'creation',
+			'error',
+		],
 		img: 'throw.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-throw',
@@ -213,7 +247,10 @@ It can be used for composing with other Observables, such as in a [\`mergeMap\`]
 	},
 
 	timer: {
-		categories: ['creation', 'time'],
+		categories: [
+			'creation',
+			'time',
+		],
 		img: 'timer.png',
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-timer',
@@ -233,7 +270,9 @@ Otherwise, it emits an infinite sequence.`,
 	},
 
 	webSocket: {
-		categories: ['creation'],
+		categories: [
+			'creation',
+		],
 		url:
 			'http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html#static-method-webSocket',
 		description: `Create a **Subject** that wraps around w3c-compatible \`WebSocket\` object.
@@ -269,7 +308,11 @@ subject.next(JSON.stringify({ op: 'hello' }));
 	},
 
 	generate: {
-		categories: ['creation', 'utility', 'data'],
+		categories: [
+			'creation',
+			'utility',
+			'data',
+		],
 		url:
 			'https://github.com/ReactiveX/rxjs/blob/master/src/observable/GenerateObservable.ts#L66-L88',
 		img: 'generate.png',

@@ -34,6 +34,8 @@ export function Operator(sources: OperatorSources): OperatorSinks {
 	};
 }
 
+const SEL_DOCS_LINK = '.docs-link';
+
 const categoryNames = Object.keys(categories) as CategoryName[];
 const parser = getParser();
 
@@ -48,6 +50,7 @@ function intent({
 }: OperatorSources): Intentions {
 	const { name, categories, description } = operatorData;
 	const id = idSelector(name);
+	const headerSelector = `${id} .panel-heading`;
 	const operatorCategories = new Set(categories);
 
 	const initialProps: OperatorProps = {
@@ -64,13 +67,14 @@ function intent({
 	};
 
 	const collapseState = Observable.from(
-		DOM.select(`${id} .panel-heading`).events('click')
+		DOM.select(headerSelector).events('click')
 	).scan(
-		({ isCollapsed }) => ({
-			isCollapsed: !isCollapsed,
+		({ isCollapsed }, { target }) => ({
+			isCollapsed: isDocsLink(target) ? isCollapsed : !isCollapsed,
 		}),
 		initialProps
 	);
+
 	const catDisplayState = categoryDisplay
 		.map(shouldBeDisplayed => shouldBeDisplayed(categories))
 		.distinctUntilChanged()
@@ -93,6 +97,14 @@ function intent({
 	return {
 		uiProps: propsState.startWith(initialProps),
 	};
+
+	function isDocsLink(target: EventTarget): target is HTMLAnchorElement {
+		// Check that is's an element, and that the element doesn't contains the docs link
+		return (
+			typeof target['querySelector'] === 'function' &&
+			!(target as Element).querySelector(SEL_DOCS_LINK)
+		);
+	}
 }
 
 interface OperatorProps {
@@ -137,15 +149,17 @@ function operatorView({
 				),
 				h3('.col-sm-6.col-lg-7', {}, [
 					a(
-						'',
+						SEL_DOCS_LINK,
 						{
-							props: {
+							attrs: {
 								href: url,
 								target: '_blank',
 							},
-							on: {
-								click: (ev: Event) => ev.preventDefault(),
-							},
+							// on: {
+							// 	click: (ev: Event) => (
+							// 		console.log(ev), ev.preventDefault()
+							// 	),
+							// },
 						},
 						code('', {}, name)
 					),
