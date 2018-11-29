@@ -1,5 +1,9 @@
 # Todos
 
+## next ver
+
+- [x] rollback to jquery and side-effects management
+
 ## all
 
 - [x] merge: relative to other flatting ops - doesn't affect subscription
