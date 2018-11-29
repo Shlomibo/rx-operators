@@ -1,8 +1,5 @@
-import 'rxjs/add/observable/never';
-import { Observable } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
-import { Subject } from 'rxjs/Subject';
-import { Subscription } from 'rxjs/Subscription';
+import { merge, materialize, dematerialize } from 'rxjs/operators';
+import { Observable, Observer, Subject, Subscription } from 'rxjs';
 
 export type ObservableMerger<T> = (source: Observable<T>) => Subscription;
 export interface MergedObservable<T> {
@@ -14,10 +11,11 @@ export function mergedObservables<T>(): MergedObservable<T> {
 
 	return {
 		observable: subject.asObservable(),
-		merger: observable => observable.let(incompletable).subscribe(subject),
+		merger: observable =>
+			observable.pipe(merge(neverComplete<T>())).subscribe(subject),
 	};
 }
 
-function incompletable<T>(observable: Observable<T>): Observable<T> {
-	return observable.merge(Observable.never<T>());
+function neverComplete<T>(): Observable<T> {
+	return Observable.create((obs: Observer<T>) => {});
 }

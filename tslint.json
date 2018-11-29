@@ -3,7 +3,7 @@
 	"extends": ["tslint:recommended"],
 	"jsRules": {},
 	"rules": {
-		"indent": ["tab"],
+		"indent": [true, "tabs"],
 		"quotemark": [true, "single", "avoid-escape", "jsx-double"],
 		"object-literal-sort-keys": [false],
 		"one-variable-per-declaration": [false],
@@ -12,17 +12,18 @@
 		"no-angle-bracket-type-assertion": false,
 		"trailing-comma": [false],
 		"no-shadowed-variable": false,
-		"whitespace": ["check-typecast"],
+		"whitespace": [true, "check-typecast"],
 		"no-console": [false],
 		"no-string-literal": false,
 		"ordered-imports": false,
 		"one-line": [true, "check-open-brace", "check-whitespace"],
-		"variable-name": ["allow-leading-underscore"],
-		"max-classes-per-file": [false],
+		"variable-name": [true, "allow-leading-underscore"],
+		"max-classes-per-file": false,
 		"array-type": [false],
 		"member-ordering": [false],
-		"only-arrow-functions": ["allow-named-functions"],
-		"object-literal-key-quotes": ["as-needed"]
+		"only-arrow-functions": [true, "allow-named-functions"],
+		"object-literal-key-quotes": [true, "as-needed"],
+		"no-empty":false
 	},
 	"rulesDirectory": []
 }

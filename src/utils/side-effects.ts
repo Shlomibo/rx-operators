@@ -1,22 +1,25 @@
-import 'rxjs/add/operator/first';
-import 'rxjs/add/operator/takeUntil';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
-import { BoundCallbackObservable } from 'rxjs/observable/BoundCallbackObservable';
-import { Subject } from 'rxjs/Subject';
+import {
+	bindCallback,
+	Observable,
+	ReplaySubject,
+	Subject,
+	MonoTypeOperatorFunction,
+} from 'rxjs';
+import { first, takeUntil } from 'rxjs/operators';
+import { OneOrMany } from './types';
 
 export interface SideEffectMetadata {
 	[key: string]: any;
 }
-export type SideEffectFunc<T> = (...args: any[]) => T;
-export interface SideEffect<T = any> {
+export type SideEffectFunc<TArgs extends any[], T> = (...args: TArgs) => T;
+export interface SideEffect<TArgs extends any[], T> {
 	(): void;
 	args: any[];
-	sideEffect: SideEffectFunc<T>;
+	sideEffect: SideEffectFunc<TArgs, T>;
 	completed: Observable<T>;
 	cancelled: Observable<true>;
 	cancel(): void;
-	clone: SideEffect<T>;
+	clone: SideEffect<TArgs, T>;
 	metadata: SideEffectMetadata;
 }
 
@@ -28,10 +31,10 @@ export interface SideEffect<T = any> {
  *
  * @return SideEffect function
  */
-export function createSideEffect<T = any>(
-	sideEffect: SideEffectFunc<T>,
-	...args: any[]
-): SideEffect<T>;
+export function createSideEffect<TArgs extends any[], T>(
+	sideEffect: SideEffectFunc<TArgs, T>,
+	...args: TArgs
+): SideEffect<TArgs, T>;
 /**
  * Creates side effect function, that can be introspcted, and having side-effect-completion observable
  *
@@ -41,27 +44,27 @@ export function createSideEffect<T = any>(
  *
  * @return SideEffect function
  */
-export function createSideEffect<T = void>(
+export function createSideEffect<TArgs extends any[], T>(
 	metadata: SideEffectMetadata,
-	sideEffect: SideEffectFunc<T>,
+	sideEffect: SideEffectFunc<TArgs, T>,
+	...args: TArgs
+): SideEffect<TArgs, T>;
+export function createSideEffect<TArgs extends any[], T = any>(
+	sideEffectOrMetadata: SideEffectFunc<TArgs, T> | SideEffectMetadata,
+	argOrSideEffect: any | SideEffectFunc<TArgs, T>,
 	...args: any[]
-): SideEffect<T>;
-export function createSideEffect<T = void>(
-	sideEffectOrMetadata: SideEffectFunc<T> | SideEffectMetadata,
-	argOrSideEffect: any | SideEffectFunc<T>,
-	...args: any[]
-): SideEffect<T> {
-	let sideEffect: SideEffectFunc<T>, metadata: SideEffectMetadata;
+): SideEffect<TArgs, T> {
+	let sideEffect: SideEffectFunc<TArgs, T>, metadata: SideEffectMetadata;
 
 	// Infer which overload was called
-	if (typeof sideEffectOrMetadata === 'function') {
+	if (typeof sideEffectOrMetadata === 'object') {
+		metadata = sideEffectOrMetadata;
+		sideEffect = argOrSideEffect;
+	}
+	else {
 		sideEffect = sideEffectOrMetadata;
 		metadata = {};
 		args.unshift(argOrSideEffect);
-	}
-	else {
-		metadata = sideEffectOrMetadata;
-		sideEffect = argOrSideEffect;
 	}
 
 	// Side effect state, an subjects to consume completion/cancellation
@@ -76,7 +79,7 @@ export function createSideEffect<T = void>(
 		sideEffect,
 		args,
 		completed: completed.asObservable(),
-		cancelled: cancellation.takeUntil(completed).first(),
+		cancelled: cancellation.pipe(takeUntil(completed), first()),
 
 		clone: () => createSideEffect(metadata, sideEffect, ...args),
 
@@ -86,7 +89,7 @@ export function createSideEffect<T = void>(
 		},
 	});
 
-	return sideEffectFunc as SideEffect<T>;
+	return sideEffectFunc as SideEffect<TArgs, T>;
 
 	/**
 	 * A wrapper around the side effect to check cancellation, and send back result
@@ -95,7 +98,7 @@ export function createSideEffect<T = void>(
 		if (!didCancel && !didRun) {
 			didRun = true;
 			try {
-				completed.next(sideEffect(...args));
+				completed.next(sideEffect(...(args as any)));
 				completed.complete();
 			} catch (err) {
 				completed.error(err);
@@ -104,34 +107,28 @@ export function createSideEffect<T = void>(
 	}
 }
 
-Observable.hotBindCallback = <any>function hotBindCallback(
-	fn: (...args: any[]) => void,
-	...args: any[]
-): (...args: any[]) => Observable<any> {
+/**
+ * Converts a function that receives callback-argument, to a function that returns an observable.
+ *
+ * @param callbackFunc The function that expects a callback
+ * @returns A function that receive the same number of arguments as the source-function (except of the callback)
+ *    and when called, calls the supplied function immidiately (unlike bindCallback), and returns an Observable
+ */
+export function hotBindCallback<TArgs extends any[], TResults extends any[]>(
+	fn: (cb: (...results: TResults[]) => void, ...args: TArgs) => void
+): (...args: TArgs) => Observable<OneOrMany<TResults>> {
 	return (...args) => {
-		const doneSubject = new ReplaySubject<any>();
+		const doneSubject = new ReplaySubject<OneOrMany<TResults>>();
 		try {
-			fn(...args, (...results: any[]) => {
+			fn((...results: TResults) => {
 				const result = results.length === 1 ? results[0] : results;
 				doneSubject.next(result);
-			});
+				doneSubject.complete();
+			}, ...args);
 		} catch (err) {
 			doneSubject.error(err);
 		}
 
-		return doneSubject.first();
+		return doneSubject.pipe(first());
 	};
-};
-
-declare module 'rxjs/Observable' {
-	namespace Observable {
-		/**
-		 * Converts a function that receives callback-argument, to a function that returns an observable.
-		 *
-		 * @param callbackFunc The function that expects a callback
-		 * @returns A function that receive the same number of arguments as the source-function (except of the callback)
-		 *    and when called, calls the supplied function immidiately (unlike bindCallback), and returns an Observable
-		 */
-		export let hotBindCallback: typeof BoundCallbackObservable.create;
-	}
 }

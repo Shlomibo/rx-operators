@@ -1,34 +1,35 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/do';
+import { Observable, MonoTypeOperatorFunction } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
-export function debug(
+export function debug<T>(
 	message: string,
 	...args: any[]
-): <T>(obs: Observable<T>) => Observable<T> {
+): MonoTypeOperatorFunction<T> {
 	return process.env.NODE_ENV !== 'production'
-		? <T>(obs: Observable<T>) =>
-				obs
-					.do(value => console.log({ message, value, args }))
-					.catch<T, T>(({ err, source }) => {
+		? (obs: Observable<T>) =>
+				obs.pipe(
+					tap(value => console.log({ message, value, args })),
+					catchError<T, T>(({ err, source }) => {
 						console.error(message, err);
 						throw err;
 					})
+				)
 		: obs => obs;
 }
 
-export function breakOn(...args: any[]): <T>(obs: Observable<T>) => Observable<T> {
+export function breakOn<T>(...args: any[]): MonoTypeOperatorFunction<T> {
 	return process.env.NODE_ENV !== 'production'
-		? <T>(obs: Observable<T>) =>
-				obs
-					.do(value => {
+		? (obs: Observable<T>) =>
+				obs.pipe(
+					tap(value => {
 						// tslint:disable-next-line:no-debugger
 						debugger;
-					})
-					.catch<T, T>((err, source) => {
+					}),
+					catchError<T, T>((err, source) => {
 						// tslint:disable-next-line:no-debugger
 						debugger;
 						throw err;
 					})
+				)
 		: obs => obs;
 }
