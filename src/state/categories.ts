@@ -19,7 +19,7 @@ export type CategoriesState = Record<CategoryType, CategoryDisplay[]> & {
 
 type CategoriesActionType = 'init' | 'categoryClicked';
 
-type CategoryAction = Action<CategoriesActionType, CategoryName>;
+export type CategoryAction = Action<CategoriesActionType, CategoryName>;
 
 export function categoriesHandling(
 	action: CategoryAction,

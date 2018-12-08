@@ -3,7 +3,9 @@ import { categoriesHandling } from './categories';
 import { searchHandling } from './search';
 import { StateView } from './store';
 
-export { appStateStore } from './app';
+export { appStateStore, AppState } from './app';
+export { CategoriesState, CategoryAction } from './categories';
+export { SearchState, SearchAction } from './search';
 
 export const categoriesStore = appStateStore.select('categories');
 export const searchStore = appStateStore.select('search');

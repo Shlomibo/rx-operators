@@ -1,73 +1,82 @@
-import { div, DOMSource, input, span, VNode } from '@cycle/dom';
-import isolate from '@cycle/isolate';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/filter';
-import { Observable } from 'rxjs/Observable';
-import { Action, ActionDescriptor, Reducer, StateSource } from '../state/action';
-import { searchActions, searchReducer, SearchState } from '../state/search';
+import { fromEvent, merge, Observable, of } from 'rxjs';
+import { Element } from './types';
+import { searchStore, update } from '../state';
+import { SearchAction } from '../state';
+import { createSideEffect, SideEffect } from '../utils/side-effects';
+import {
+	debounceTime,
+	withLatestFrom,
+	filter,
+	map,
+	switchMap,
+	share,
+} from 'rxjs/operators';
+import JQuery = require('jquery');
 
-export interface SearchSources {
-	DOM: DOMSource;
-	state: StateSource<SearchState>;
-}
-interface SearchSinks {
-	DOM: Observable<VNode>;
-	state: Observable<Reducer<SearchState>>;
-}
-
-interface IsolatedSources {
-	DOM: DOMSource;
-	state: StateSource<any>;
-}
-export interface IsolatedSinks {
-	DOM: Observable<VNode>;
-	state: Observable<Reducer<any>>;
-}
-export type SearchComponent = (sources: IsolatedSources) => IsolatedSinks;
-export function makeSearch(scope: string | object): SearchComponent {
-	return isolate(Search, scope);
-}
-function Search(sources: SearchSources): SearchSinks {
-	const { search } = intent(sources);
-
-	const vdom = sources.state.state$.map(searchView);
-
-	return {
-		DOM: vdom,
-		state: search.let(searchReducer),
-	};
+export function searchComponent(root: Element): Observable<SideEffect> {
+	return updateSearch(
+		root,
+		searchStore.state.pipe(map(state => state.search))
+	);
 }
 
-interface Intentions {
-	search: Observable<Action<any>>;
-}
-function intent({ DOM, state }: SearchSources): Intentions {
-	const searches = Observable.from(DOM.select('.search').events('input'))
-		.map(ev => (ev.target as HTMLInputElement).value)
-		.debounceTime(250)
-		.map(search => searchActions.search(search));
-
-	const reset = Observable.from(DOM.select('.search').events('keydown'))
-		.map((ev: KeyboardEvent) => ev.key)
-		.filter(key => key === 'Escape')
-		.mapTo(searchActions.reset());
-
-	return {
-		search: Observable.merge<Action<any>>(searches, reset),
-	};
+function createSearch(): JQuery<HTMLElement> {
+	return JQuery(`<div class="input-group">
+	  <span class="input-group-addon">
+	    <span class="glyphicon glyphicon-search"></span>
+	  </span>
+	  <input class="form-control search" type="text" value="" />
+	</div>`);
 }
 
-function searchView({ search }: SearchState): VNode {
-	return div('.input-group', {}, [
-		span('.input-group-addon', {}, [span('.glyphicon.glyphicon-search')]),
-		input('.form-control.search', {
-			attrs: {
-				type: 'text',
-			},
-			props: {
-				value: search,
-			},
-		}),
-	]);
+function updateSearch(
+	root: JQuery<HTMLElement>,
+	searches: Observable<string>
+): Observable<SideEffect> {
+	const creation = of(createSideEffect(create, root));
+
+	const ui = creation.pipe(switchMap(se => se.completed), share());
+
+	const searchInput = ui.pipe(map(root => root.find('input.search')));
+
+	const searcheStateUpdates = searchInput.pipe(
+		switchMap(searchStateFromInput)
+	);
+
+	const uiUpdates = searches.pipe(
+		withLatestFrom(searchInput, (search, el) => ({ search, el })),
+		filter(({ search, el }) => el.val() !== search),
+		map(({ search, el }) =>
+			createSideEffect((searchStr, el) => el.val(searchStr), search, el)
+		)
+	);
+
+	return merge(creation, searcheStateUpdates, uiUpdates);
+}
+
+function create(rootEl: Element) {
+	const search = createSearch();
+	rootEl.append(search);
+
+	return search;
+}
+
+function searchStateFromInput(input: JQuery<HTMLInputElement>) {
+	const onInput = fromEvent(input, 'input').pipe(
+		debounceTime(250),
+		map(ev => jQuery(ev.currentTarget as HTMLInputElement).val()),
+		map<string, SearchAction>(search => ({
+			name: 'search',
+			payload: search,
+		}))
+	);
+	const onKeydown = fromEvent(input, 'keydown').pipe(
+		map((ev: KeyboardEvent) => ev.key),
+		filter(key => key === 'Escape'),
+		map<any, SearchAction>(() => ({ name: 'reset' }))
+	);
+
+	return merge(onInput, onKeydown).pipe(
+		map(action => createSideEffect(update, action))
+	);
 }

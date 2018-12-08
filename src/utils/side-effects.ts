@@ -11,16 +11,23 @@ import { OneOrMany } from './types';
 export interface SideEffectMetadata {
 	[key: string]: any;
 }
-export type SideEffectFunc<TArgs extends any[], T> = (...args: TArgs) => T;
-export interface SideEffect<TArgs extends any[], T> {
+
+export type SideEffectFunc<T = any> = (...args: any[]) => T;
+export type SideEffectTypedFunc<TArgs extends any[], T> = (...args: TArgs) => T;
+export interface SideEffect<T = any> {
 	(): void;
 	args: any[];
-	sideEffect: SideEffectFunc<TArgs, T>;
+	sideEffect: SideEffectFunc<T>;
 	completed: Observable<T>;
 	cancelled: Observable<true>;
 	cancel(): void;
-	clone: SideEffect<TArgs, T>;
+	clone: SideEffect<T>;
 	metadata: SideEffectMetadata;
+}
+export interface TypedSideEffect<TArgs extends any[], T> extends SideEffect<T> {
+	args: TArgs;
+	sideEffect: SideEffectTypedFunc<TArgs, T>;
+	clone: TypedSideEffect<TArgs, T>;
 }
 
 /**
@@ -32,9 +39,9 @@ export interface SideEffect<TArgs extends any[], T> {
  * @return SideEffect function
  */
 export function createSideEffect<TArgs extends any[], T>(
-	sideEffect: SideEffectFunc<TArgs, T>,
+	sideEffect: SideEffectTypedFunc<TArgs, T>,
 	...args: TArgs
-): SideEffect<TArgs, T>;
+): TypedSideEffect<TArgs, T>;
 /**
  * Creates side effect function, that can be introspcted, and having side-effect-completion observable
  *
@@ -46,15 +53,15 @@ export function createSideEffect<TArgs extends any[], T>(
  */
 export function createSideEffect<TArgs extends any[], T>(
 	metadata: SideEffectMetadata,
-	sideEffect: SideEffectFunc<TArgs, T>,
+	sideEffect: SideEffectTypedFunc<TArgs, T>,
 	...args: TArgs
-): SideEffect<TArgs, T>;
+): TypedSideEffect<TArgs, T>;
 export function createSideEffect<TArgs extends any[], T = any>(
-	sideEffectOrMetadata: SideEffectFunc<TArgs, T> | SideEffectMetadata,
-	argOrSideEffect: any | SideEffectFunc<TArgs, T>,
+	sideEffectOrMetadata: SideEffectTypedFunc<TArgs, T> | SideEffectMetadata,
+	argOrSideEffect: any | SideEffectTypedFunc<TArgs, T>,
 	...args: any[]
-): SideEffect<TArgs, T> {
-	let sideEffect: SideEffectFunc<TArgs, T>, metadata: SideEffectMetadata;
+): TypedSideEffect<TArgs, T> {
+	let sideEffect: SideEffectTypedFunc<TArgs, T>, metadata: SideEffectMetadata;
 
 	// Infer which overload was called
 	if (typeof sideEffectOrMetadata === 'object') {
@@ -89,7 +96,7 @@ export function createSideEffect<TArgs extends any[], T = any>(
 		},
 	});
 
-	return sideEffectFunc as SideEffect<TArgs, T>;
+	return sideEffectFunc as TypedSideEffect<TArgs, T>;
 
 	/**
 	 * A wrapper around the side effect to check cancellation, and send back result
