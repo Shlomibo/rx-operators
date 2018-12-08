@@ -1,4 +1,6 @@
+import { Iterable as It } from '@reactivex/ix-es2015-cjs';
 import * as _ from 'lodash';
+import { Observable, Observer, Subject } from 'rxjs';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/map';
@@ -7,9 +9,7 @@ import 'rxjs/add/operator/multicast';
 import 'rxjs/add/operator/partition';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/startWith';
-import { Observable } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
-import { Subject } from 'rxjs/Subject';
+import { iterateObect } from '../utils/index';
 
 export type CategoryName =
 	| 'data'
@@ -42,7 +42,7 @@ export type CategoriesData = Record<CategoryName, CategoryData>;
 /**
  * @var categories All the categories
  */
-export const categories = <CategoriesData>_({
+export const categories = iterateObect({
 	data: {
 		type: 'effects',
 		description: 'Do you want to change what is emitted?',
@@ -106,20 +106,22 @@ export const categories = <CategoriesData>_({
 		description: 'Utility operators.',
 	},
 })
-	.toPairs<CategoryData>()
-	.orderBy([([, { type }]) => type])
+	.orderBy(([ , { type } ]) => type)
 	.reduce(
-		(categories, [name, data]) => {
-			categories[name] = data;
+		(categories, [ name, data ]) => {
+			categories[name] = data as CategoryData;
 			return categories;
 		},
-		<Partial<Record<CategoryName, CategoryData>>>{}
-	);
+		{} as Partial<Record<CategoryName, CategoryData>>
+	) as CategoriesData;
 
 /**
  * @var typeInitialization Category initialization by category-type
  */
-const typeInitialization: Record<CategoryType, (cat: CategoryName) => boolean> = {
+const typeInitialization: Record<
+	CategoryType,
+	(cat: CategoryName) => boolean
+> = {
 	effects: cat => true,
 	usage: cat => false,
 };

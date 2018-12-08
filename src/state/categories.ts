@@ -1,5 +1,6 @@
-import * as _ from 'lodash';
-import { ActionDispatcher, Actions, PayloadsType, reduce } from './action';
+import { Iterable as It } from '@reactivex/ix-es2015-cjs';
+import { Action } from './action';
+import { Entry } from '../utils/types';
 import {
 	CategoryType,
 	CategoryDisplay,
@@ -16,39 +17,34 @@ export type CategoriesState = Record<CategoryType, CategoryDisplay[]> & {
 	displaySelection: DisplaySelection;
 };
 
-interface CategoriesPayload extends PayloadsType<CategoriesState> {
-	categoryClicked: CategoryName;
+type CategoriesActionType = 'init' | 'categoryClicked';
+
+type CategoryAction = Action<CategoriesActionType, CategoryName>;
+
+export function categoriesHandling(
+	action: CategoryAction,
+	state: CategoriesState
+): CategoriesState {
+	switch (action.name) {
+		case 'init':
+			return initCategories();
+
+		case 'categoryClicked':
+			if (!action.payload) {
+				return state;
+			}
+
+			return categoryHandling(state, action.payload);
+
+		default:
+			return state;
+	}
 }
 
-export const categoryActions: Actions<CategoriesPayload> = {
-	init: () => 'init',
-	categoryClicked: name => ({
-		name: 'categoryClicked',
-		payload: name!,
-	}),
-};
-
-const categoriesDispatcher: ActionDispatcher<CategoriesState, CategoriesPayload> = {
-	init: () => () => initCategories(),
-	categoryClicked: ({ payload: catName }) => state =>
-		state && categoryHandling(state, catName!),
-};
-
-export const categoriesReducer = reduce(categoriesDispatcher);
-
-function initCategories(): CategoriesState {
-	return {
-		effects: effectCategories.map(initialDisplayOutOfName).value(),
-		usage: usageCategories.map(initialDisplayOutOfName).value(),
-		active: 'effects',
-		displaySelection: typeOperatorSelection.effects(effectCategories.value()),
-	};
-}
-
-const EFFECTS_CATEGORIES_COUNT = _(categories)
-	.toPairs()
-	.filter(([, data]: [string, CategoryData]) => data.type === 'effects')
-	.value().length;
+const EFFECTS_CATEGORIES_COUNT = It.from(Object.entries(categories) as Entry<
+	CategoryName,
+	CategoryData
+>[]).count(([ , data ]: [string, CategoryData]) => data.type === 'effects');
 
 /**
  * @var typeOperatorSelection Mappping from category-type to functions, that returns functions to determine
@@ -59,7 +55,7 @@ const typeOperatorSelection: Record<
 	(selected: CategoryName[]) => DisplaySelection
 > = {
 	usage: selected => opCategories =>
-		_(opCategories)
+		It.from(opCategories)
 			.filter(category => categories[category].type === 'usage')
 			.some((opCategory: CategoryName) => selected.includes(opCategory)),
 	effects: selected => opCategories =>
@@ -72,7 +68,7 @@ const byTypeFilter = (type: CategoryType) => (name: CategoryName) =>
 	categories[name].type === type;
 
 // Lodash wrapper to category-names
-const categoryNames = _(categories).keys() as _.LoDashImplicitArrayWrapper<CategoryName>,
+const categoryNames = It.from(Object.keys(categories) as CategoryName[]),
 	effectCategories = categoryNames.filter(byTypeFilter('effects')),
 	usageCategories = categoryNames.filter(byTypeFilter('usage'));
 
@@ -138,7 +134,9 @@ function typeHandling(
 	clickedCategory: CategoryName
 ): CategoryDisplay[] {
 	// All categories excluding the clicked one
-	const filteredCategories = typeState.filter(({ name }) => name !== clickedCategory);
+	const filteredCategories = typeState.filter(
+		({ name }) => name !== clickedCategory
+	);
 
 	// Current category type considerred full, if all categories are displayed
 	const isTypeFull =
@@ -159,4 +157,17 @@ function typeHandling(
 				name,
 				display: name === clickedCategory || !display,
 			}));
+}
+
+export const initialCategories: CategoriesState = {
+	effects: effectCategories.map(initialDisplayOutOfName).toArray(),
+	usage: usageCategories.map(initialDisplayOutOfName).toArray(),
+	active: 'effects',
+	displaySelection: typeOperatorSelection.effects(effectCategories.toArray()),
+};
+
+function initCategories(): CategoriesState {
+	return {
+		...initialCategories,
+	};
 }

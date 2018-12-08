@@ -1,27 +1,35 @@
-import { Action, ActionDispatcher, Actions, reduce } from './action';
+import { Action } from './action';
 
 export interface SearchState {
 	search: string;
 }
 
-interface SearchPayloads {
-	init: SearchState;
-	reset: undefined;
-	search: string;
+export type SearchActionType = 'reset' | 'search';
+export type SearchAction = Action<SearchActionType, string>;
+
+export function searchHandling(
+	searchAction: SearchAction,
+	state: SearchState
+): SearchState {
+	switch (searchAction.name) {
+		case 'reset':
+			return initSearch();
+
+		case 'search':
+			return typeof searchAction.payload === 'string'
+				? { search: searchAction.payload }
+				: initSearch();
+
+		default:
+			return state;
+	}
 }
-export const searchActions: Actions<SearchPayloads> = {
-	init: () => 'init',
-	reset: () => 'reset',
-	search: (search: string) => ({
-		name: 'search',
-		payload: search,
-	}),
-};
 
-const searchDispatcher: ActionDispatcher<SearchState, SearchPayloads> = {
-	init: () => () => ({ search: '' }),
-	reset: () => () => ({ search: '' }),
-	search: ({ payload: search }) => () => ({ search: search! }),
+export const emptySearch: SearchState = {
+	search: '',
 };
-
-export const searchReducer = reduce(searchDispatcher);
+function initSearch(): SearchState {
+	return {
+		...emptySearch,
+	};
+}
