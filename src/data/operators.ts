@@ -1,10 +1,4 @@
-import * as _ from 'lodash';
-import 'rxjs/add/observable/concat';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/expand';
-import { Observable } from 'rxjs/Observable';
 import { aggregationOprators } from './aggregation';
-import { categories as catDefinition, CategoryDisplay, CategoryName } from './categories';
 import { combinationOperators } from './combination';
 import { conditionalOperators } from './conditional';
 import { creationOperators } from './creation';
@@ -14,6 +8,8 @@ import { multicastOperators } from './multicast';
 import { transformationOperators } from './transformation';
 import { utilityOperators } from './utility';
 import '../img';
+import { iterateObect } from '../utils/index';
+import { categories as catDefinition, CategoryName } from './categories';
 
 export interface OperatorData {
 	categories: CategoryName[];
@@ -23,9 +19,9 @@ export interface OperatorData {
 	description: string;
 }
 
-const categories = <CategoryName[]>Object.keys(catDefinition);
+const categories = Object.keys(catDefinition) as CategoryName[];
 export type Operators = Record<string, OperatorData>;
-export const operators: Operators = _({
+export const operators: Operators = iterateObect({
 	...combinationOperators,
 	...errorHandlingOperators,
 	...filteringOperators,
@@ -37,9 +33,11 @@ export const operators: Operators = _({
 	...utilityOperators,
 })
 	// Order operators by name
-	.toPairs<OperatorData>()
-	.orderBy([([name]) => name])
-	.reduce((operators, [name, data]) => {
-		operators[name] = data;
-		return operators;
-	}, {} as Operators);
+	.orderBy(([ name ]) => name)
+	.reduce(
+		(operators, [ name, data ]) => {
+			operators[name] = data;
+			return operators;
+		},
+		{} as Operators
+	);

@@ -53,9 +53,6 @@ function updateSearch(
 
 	return {
 		updates: merge(creation, searcheStateUpdates, uiUpdates),
-		events(event: string) {
-			return ui.pipe(switchMap(el => fromEvent(el, event)));
-		},
 	};
 }
 

@@ -11,6 +11,7 @@ import {
 	skipWhile,
 	withLatestFrom,
 	filter,
+	switchMap,
 } from 'rxjs/operators';
 import jQuery = require('jquery');
 
@@ -27,6 +28,7 @@ interface ViewState {
 
 export interface Category extends Component {
 	name: CategoryName;
+	clicks: Observable<unknown>;
 }
 
 export function category(
@@ -70,13 +72,10 @@ export function category(
 	return {
 		name,
 		updates: merge(creation, viewUpdates),
-		events(event: string) {
-			return fromEvent(root, event).pipe(
-				filter(ev =>
-					jQuery(ev.currentTarget!).hasClass(catgoryClassName(name))
-				)
-			);
-		},
+		clicks: creation.pipe(
+			switchMap(se => se.completed),
+			switchMap(el => fromEvent(el, 'click'))
+		),
 	};
 }
 

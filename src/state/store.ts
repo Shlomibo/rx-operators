@@ -17,6 +17,7 @@ export type Updater<TAction extends Action<string>> = (
 
 export abstract class StateView<T> {
 	public readonly state: Observable<T>;
+	public abstract readonly current: T;
 
 	constructor(state: Observable<T>) {
 		this.state = state;
@@ -82,6 +83,9 @@ class KeyView<T extends object, TKey extends keyof T> extends StateView<
 > {
 	private readonly _parent: StateView<T>;
 	private readonly _key: TKey;
+	public get current() {
+		return this._parent.current[this._key];
+	}
 
 	constructor(parent: StateView<T>, key: TKey) {
 		super(parent.state.pipe(map(state => state[key])));
@@ -102,6 +106,9 @@ class KeyView<T extends object, TKey extends keyof T> extends StateView<
 
 export class Store<T> extends StateView<T> {
 	private readonly _store: BehaviorSubject<T>;
+	public get current() {
+		return this._store.value;
+	}
 
 	constructor(initState: T) {
 		const state = new BehaviorSubject(initState);

@@ -1,247 +1,266 @@
-import { a, code, div, DOMSource, h3, img, li, ul, VNode } from '@cycle/dom';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/scan';
-import { Observable } from 'rxjs/Observable';
-import virtualizeHtml from 'snabbdom-virtualize/strings';
-import { categories, CategoryName } from '../data/categories';
+import { Iterable as It } from '@reactivex/ix-es2015-cjs';
+import { combineLatest, fromEvent, merge, Observable } from 'rxjs';
+import { Component, Element } from './types';
 import { OperatorData } from '../data/operators';
 import { getParser } from '../markdown';
+import { CategoriesState, DisplaySelection } from '../state/categories';
+import { operatorHandling, OperatorState } from '../state/operators';
+import { StateView } from '../state/store';
+import { createSideEffect } from '../utils/side-effects';
+import { Entry } from '../utils/types';
 import {
-	classSelector,
-	ClassSelector,
-	IdSelector,
-	idSelector,
-	joinClasses,
-} from '../helpers/selectors';
+	categories as allCategories,
+	CategoryName,
+	CategoryData,
+} from '../data/categories';
+import jQuery = require('jquery');
+import {
+	scan,
+	map,
+	share,
+	first,
+	switchMap,
+	withLatestFrom,
+	skip,
+	distinctUntilChanged,
+	filter,
+} from 'rxjs/operators';
 
 export interface OperatorDataWithName extends OperatorData {
 	name: string;
 }
-export interface OperatorSources {
-	DOM: DOMSource;
-	categoryDisplay: Observable<(categories: CategoryName[]) => boolean>;
-	search: Observable<string>;
-	operatorData: OperatorDataWithName;
-}
-export interface OperatorSinks {
-	DOM: Observable<VNode>;
-}
-export function Operator(sources: OperatorSources): OperatorSinks {
-	const { uiProps } = intent(sources);
 
-	return {
-		DOM: uiProps.map(props => operatorView(props)),
-	};
+export interface Operator extends Component {
+	name: string;
 }
 
-const SEL_DOCS_LINK = '.docs-link';
+const SEL_DOCS_LINK = 'docs-link';
 
-const categoryNames = Object.keys(categories) as CategoryName[];
+const categoryNames = Object.keys(allCategories) as CategoryName[];
 const parser = getParser();
 
-interface Intentions {
-	uiProps: Observable<OperatorProps>;
-}
-function intent({
-	DOM,
-	categoryDisplay,
-	search,
-	operatorData,
-}: OperatorSources): Intentions {
-	const { name, categories, description } = operatorData;
-	const id = idSelector(name);
-	const headerSelector = `${id} .panel-heading`;
-	const operatorCategories = new Set(categories);
+export function operator(
+	root: Element,
+	id: string,
+	name: string,
+	url: string,
+	categories: CategoryName[],
+	opState: StateView<OperatorState>,
+	search: Observable<string>,
+	catState: Observable<CategoriesState>,
+	description?: string,
+	img?: string,
+	playWithUrl?: string
+): Operator {
+	catState = catState.pipe(share());
 
-	const initialProps: OperatorProps = {
-		id,
-		...operatorData,
-		description: parser.render(description),
-		isOperatorDisplayed: true,
-		isCategoryDisplayed: true,
-		isCollapsed: true,
-		categories: categoryNames.map(name => ({
-			name,
-			isActive: operatorCategories.has(name),
-		})),
-	};
+	const updateState = opState.createUpdater(operatorHandling);
 
-	const collapseState = Observable.from(
-		DOM.select(headerSelector).events('click')
-	).scan(
-		({ isCollapsed }, { target }) => ({
-			isCollapsed: isDocsLink(target) ? isCollapsed : !isCollapsed,
-		}),
-		initialProps
+	const catDisplay = catState.pipe(map(state => state.displaySelection));
+	const activeCategories = catState.pipe(
+		map(({ active }) =>
+			It.from(categories)
+				.map(
+					cat =>
+						[ cat, allCategories[cat] ] as Entry<
+							CategoryName,
+							CategoryData
+						>
+				)
+				.map(([ cat, { type } ]) => ({
+					name: cat,
+					isActive: type === active,
+				}))
+				.toArray()
+		)
 	);
 
-	const catDisplayState = categoryDisplay
-		.map(shouldBeDisplayed => shouldBeDisplayed(categories))
-		.distinctUntilChanged()
-		.map(isCategoryDisplayed => ({ isCategoryDisplayed }));
-	const searchDisplayState = search
-		.map(search => !search || name.toLowerCase().includes(search))
-		.distinctUntilChanged()
-		.map(isOperatorDisplayed => ({ isOperatorDisplayed }));
+	const state: Observable<
+		OperatorProps
+	> = combineLatest(
+		opState.state,
+		search.pipe(
+			map(
+				searchStr =>
+					!searchStr ||
+					name.toLowerCase().includes(searchStr.toLowerCase())
+			),
+			distinctUntilChanged()
+		),
+		catDisplay.pipe(
+			map(dispSelection => dispSelection(categories)),
+			distinctUntilChanged()
+		),
+		activeCategories,
+		(opState, isSearched, isCatDisplayed, catActivation) => ({
+			isCollapsed: opState.collapsed,
+			isOperatorDisplayed: isSearched,
+			isCategoryDisplayed: isCatDisplayed,
+			categories: catActivation,
+		})
+	);
 
-	const propsState = Observable.merge<
-		Pick<OperatorProps, keyof OperatorProps>
-	>(collapseState, catDisplayState, searchDisplayState).scan(
-		(state, update) => ({
-			...state,
-			...update,
-		}),
-		initialProps
+	const ui = state.pipe(
+		scan<OperatorProps, [OperatorProps, Element]>(
+			([ , el ], state) => [
+				state,
+				el ||
+					createOperatorView(
+						id,
+						name,
+						url,
+						description,
+						img,
+						playWithUrl,
+						state
+					),
+			],
+			[ , ] as any
+		),
+		share()
+	);
+
+	const uiAttachment = ui.pipe(
+		first(),
+		map(([ , el ]) =>
+			createSideEffect((root, el) => root.append(el), root, el)
+		),
+		switchMap(se => se.completed)
+	);
+
+	const stateUpdates = uiAttachment.pipe(
+		switchMap(el => fromEvent(el.find('.panel-heading'), 'click')),
+		map(ev => ev.target && jQuery(ev.target)),
+		filter(target => !!target && !target.is(`.${SEL_DOCS_LINK}`)),
+		map(el => createSideEffect(updateState, { name: 'collapse' }))
+	);
+
+	const uiUpdates = state.pipe(
+		skip(1),
+		withLatestFrom(uiAttachment),
+		map(([ state, el ]) => createSideEffect(updateView, el, state))
 	);
 
 	return {
-		uiProps: propsState.startWith(initialProps),
+		name,
+		updates: merge(uiUpdates, stateUpdates),
 	};
+}
 
-	function isDocsLink(target: EventTarget): target is HTMLAnchorElement {
-		// Check that is's an element, and that the element doesn't contains the docs link
-		return (
-			typeof target['querySelector'] === 'function' &&
-			!(target as Element).querySelector(SEL_DOCS_LINK)
-		);
-	}
+const CLS_COLLAPSED = 'collapse';
+const CLS_CAT_INACTIVE = 'cat-inactive';
+const CLS_CAT_HIDDEN = 'cat-hidden';
+const CLS_OP_HIDDEN = 'hidden';
+
+function updateView(
+	el: Element,
+	{
+		isOperatorDisplayed,
+		isCategoryDisplayed,
+		categories,
+		isCollapsed,
+	}: OperatorProps
+): Element {
+	el
+		.toggleClass(CLS_OP_HIDDEN, !isOperatorDisplayed)
+		.toggleClass(CLS_CAT_HIDDEN, !isCategoryDisplayed);
+
+	el.find('.operator-desc').toggleClass(CLS_COLLAPSED, isCollapsed);
+
+	const categoriesRoot = el.find('ul.categories');
+
+	categoriesRoot.empty();
+	categoriesRoot.append(categories.map(categoryMarker));
+
+	return el;
+}
+
+function createOperatorView(
+	id: string,
+	name: string,
+	url: string,
+	description: string | undefined,
+	img: string | undefined,
+	playWithUrl: string | undefined,
+	state: OperatorProps
+): Element {
+	const result = jQuery(`<li id="${id}" class="operator panel panel-default">
+	  <div class="panel-heading container-fluid">
+		<div class="col-sm-6 col-lg-5">
+			<ul class="categories"></ul>
+		</div>
+		<h3 class="col-sm-6 col-lg-7">
+		  <a class="${SEL_DOCS_LINK}" href="${url} target="_blank">
+		    <code>${name}</code>
+		  </a>
+		</h3>
+	  </div>
+	</li>`);
+
+	result.append(
+		operatorDisplay(description, 'panel-body', false, img, playWithUrl)
+	);
+
+	return updateView(result, state);
 }
 
 interface OperatorProps {
-	id: IdSelector;
-	name: string;
-	url: string;
-	description?: string;
-	img?: string;
-	playWithUrl?: string;
-	isCategoryDisplayed: boolean;
 	isOperatorDisplayed: boolean;
-	categories: CategoryMarkerProps[];
+	isCategoryDisplayed: boolean;
+	categories: CategoryMarker[];
 	isCollapsed: boolean;
 }
-function operatorView({
-	id,
-	name,
-	url,
-	description,
-	img,
-	playWithUrl,
-	isCategoryDisplayed,
-	isOperatorDisplayed,
-	categories,
-	isCollapsed,
-}: OperatorProps): VNode {
-	return li(
-		`${id}.operator.panel.panel-default`,
-		{
-			key: name,
-			class: {
-				'cat-hidden': !isCategoryDisplayed,
-				hidden: !isOperatorDisplayed,
-			},
-		},
-		[
-			div('.panel-heading.container-fluid', {}, [
-				div(
-					'.col-sm-6.col-lg-5',
-					{},
-					ul('.categories', {}, categories.map(categoryMarker))
-				),
-				h3('.col-sm-6.col-lg-7', {}, [
-					a(
-						SEL_DOCS_LINK,
-						{
-							attrs: {
-								href: url,
-								target: '_blank',
-							},
-							// on: {
-							// 	click: (ev: Event) => (
-							// 		console.log(ev), ev.preventDefault()
-							// 	),
-							// },
-						},
-						code('', {}, name)
-					),
-				]),
-			]),
-			operatorDisplay({
-				html: description,
-				selector: classSelector('.panel-body'),
-				isCollapsed,
-				img,
-				playWithUrl,
-			}),
-		]
-	);
-}
 
-interface CategoryMarkerProps {
+interface CategoryMarker {
 	name: CategoryName;
 	isActive: boolean;
 }
-function categoryMarker({ name, isActive }: CategoryMarkerProps): VNode {
-	return li(`.category.cat-${name}`, {
-		key: name,
-		class: { 'cat-inactive': !isActive },
-		props: { title: name },
-	});
+
+function categoryMarker({ name, isActive }: CategoryMarker): Element {
+	const result = jQuery(
+		`<li class="category cat-${name}" title="${name}"></li>`
+	);
+
+	return isActive
+		? result.addClass(CLS_CAT_INACTIVE)
+		: result.removeClass(CLS_CAT_INACTIVE);
 }
 
-interface OperatorDescriptionProperties {
-	html?: string;
-	img?: string;
-	playWithUrl?: string;
-	selector?: ClassSelector;
-	isCollapsed: boolean;
-}
-function operatorDisplay({
-	html = '',
-	selector = '',
-	isCollapsed,
-	img: imgSource,
-	playWithUrl,
-}: OperatorDescriptionProperties): VNode {
-	const descColCount = !!img ? 6 : 12;
+function operatorDisplay(
+	html: string | undefined,
+	selector: string | undefined,
+	isCollapsed: boolean,
+	imgSource: string | undefined,
+	playWithUrl: string | undefined
+): Element {
+	const descColCount = !!imgSource ? 6 : 12;
 
 	const imgUI =
 		imgSource &&
-		img('.col-sm-6.image-rounded', {
-			props: { src: `./img/${imgSource}` },
-		});
-	const playWithLink =
-		playWithUrl &&
-		a(
-			'',
-			{
-				props: {
-					href: playWithUrl,
-					title: 'Play with operator on RxJS Marbles',
-					target: '_blank',
-				},
-			},
-			[
-				imgUI,
-			]
+		jQuery(
+			`<img class="col-sm-6 image-rounded" src="./img/${imgSource}" />`
 		);
 
-	const descriptionUI = !!html ? virtualizeHtml(html) : [];
-	const imgChildren = !!imgUI
-		? [
-				playWithLink || imgUI,
-			]
-		: [];
+	const playWithLink =
+		playWithUrl &&
+		jQuery(
+			`<a href="${playWithUrl}" title="Play with operator on RxJS Marbles" target="_blank"></a>`
+		);
 
-	return div(
-		`.operator-desc.container-fluid${selector}`,
-		{
-			class: {
-				collapse: isCollapsed,
-			},
-		},
-		[
-			div(`.col-sm-${descColCount}`, {}, descriptionUI),
-			...imgChildren,
-		]
-	);
+	if (imgUI && playWithLink) {
+		playWithLink.append(imgUI);
+	}
+
+	const imgChildren = !!imgUI ? [ playWithLink || imgUI ] : [];
+
+	const result = jQuery(`<div class="operator-desc container-fluid ${selector ||
+		''}">
+	  <div class="col-sm-${descColCount}">${html || ''}</div>
+	</div>`);
+
+	if (playWithLink || imgUI) {
+		result.append(playWithLink || imgUI!);
+	}
+
+	return result.toggleClass(CLS_COLLAPSED, isCollapsed);
 }

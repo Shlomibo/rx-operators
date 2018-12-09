@@ -51,9 +51,7 @@ export function categories(
 
 			const catView = merge(...categories.map(cat => cat.updates));
 			const catEvents = merge(
-				...categories.map(cat =>
-					cat.events('click').pipe(mapTo(cat.name))
-				)
+				...categories.map(cat => cat.clicks.pipe(mapTo(cat.name)))
 			).pipe(
 				map(
 					clickedCat =>
@@ -71,7 +69,6 @@ export function categories(
 
 	return {
 		updates: categoriesHandling,
-		events: () => empty(),
 	};
 }
 

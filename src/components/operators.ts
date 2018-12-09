@@ -1,72 +1,69 @@
-import { VNode, ul, DOMSource } from '@cycle/dom';
-import { Observable } from 'rxjs/Observable';
-import { DisplaySelection } from './app';
-import { Operators as OperatorsType, OperatorData } from '../data/operators';
-import 'rxjs/add/operator/mergeAll';
-import 'rxjs/add/operator/combineAll';
-import * as _ from 'lodash';
-import { Operator } from './operator';
-import { StateSource, select, BANG } from '../state/action';
-import { Reducer } from 'cycle-onionify';
-import isolate from '@cycle/isolate';
+import { Iterable as It } from '@reactivex/ix-es2015-cjs';
+import { merge, Observable, of } from 'rxjs';
+import { map, share, switchMap } from 'rxjs/operators';
+import { operator } from './operator';
+import { Component, Element } from './types';
+import { createSideEffect } from '../utils/side-effects';
+import { OperatorData, operators as allOperators } from '../data/operators';
+import jQuery = require('jquery');
+import {
+	OperatorsState,
+	CategoriesState,
+	StateView,
+	OperatorState,
+} from '../state';
 
-export interface OperatorsState {
-	search: string;
-	categoryDisplay: DisplaySelection;
-}
+export function operators(
+	root: Element,
+	operators: StateView<OperatorsState>,
+	search: Observable<string>,
+	categories: Observable<CategoriesState>
+): Component {
+	const creation = of(
+		createSideEffect(
+			(root, el) => root.append(el),
+			root,
+			jQuery('<ul class="operators"></ul>')
+		)
+	);
 
-export interface IsolatedSources {
-	DOM: DOMSource;
-	state: StateSource<any>;
-	operators: OperatorsType;
-}
-export interface IsolatedSinks {
-	DOM: Observable<VNode>;
-}
-export type OperatorsComponent = (sources: IsolatedSources) => IsolatedSinks;
-export function makeOperators(scope: string | object): OperatorsComponent {
-	return isolate(Operators, scope);
-}
+	const uiRoot = creation.pipe(switchMap(se => se.completed), share());
 
-interface OperatorsSources {
-	DOM: DOMSource;
-	state: StateSource<OperatorsState>;
-	operators: OperatorsType;
-}
-interface OperatorsSinks {
-	DOM: Observable<VNode>;
-}
+	const opNames = It.from(Object.keys(operators.current));
 
-function Operators({
-	DOM,
-	state: stateSource,
-	operators,
-}: OperatorsSources): OperatorsSinks {
-	const state = stateSource.state$.share(),
-		categoryDisplay = state.let(select('categoryDisplay')).let(BANG),
-		search = state.let(select('search')).let(BANG);
+	const opComponents = opNames
+		.map(
+			name =>
+				[ name, operators.select(name), allOperators[name] ] as [
+					string,
+					StateView<OperatorState>,
+					OperatorData
+				]
+		)
+		.map(([ name, opState, opData ]) =>
+			uiRoot.pipe(
+				map(root =>
+					operator(
+						root,
+						name,
+						name,
+						opData.url,
+						opData.categories,
+						opState,
+						search,
+						categories
+					)
+				)
+			)
+		)
+		.toArray();
 
 	return {
-		DOM: Observable.from(
-			_(operators)
-				.toPairs()
-				.map(([ name, data
-				]: [string, OperatorData]) => ({
-					name,
-					...data,
-				}))
-				.map(operatorData =>
-					Operator({ DOM, categoryDisplay, search, operatorData })
-				)
-				.map(({ DOM }) => DOM)
-				.value()
-		).combineAll((...operators: VNode[]) => operatorsView({ operators })),
+		updates: merge(
+			creation,
+			...opComponents.map(compObservable =>
+				compObservable.pipe(switchMap(comp => comp.updates))
+			)
+		),
 	};
-}
-
-interface OperatorsProps {
-	operators: VNode[];
-}
-function operatorsView({ operators }: OperatorsProps) {
-	return ul('.operators', {}, operators);
 }
