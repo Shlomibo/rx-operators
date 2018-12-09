@@ -1,5 +1,5 @@
 import { fromEvent, merge, Observable, of } from 'rxjs';
-import { Element } from './types';
+import { Element, Component } from './types';
 import { searchStore, update } from '../state';
 import { SearchAction } from '../state';
 import { createSideEffect, SideEffect } from '../utils/side-effects';
@@ -13,7 +13,7 @@ import {
 } from 'rxjs/operators';
 import JQuery = require('jquery');
 
-export function searchComponent(root: Element): Observable<SideEffect> {
+export function searchComponent(root: Element): Component {
 	return updateSearch(
 		root,
 		searchStore.state.pipe(map(state => state.search))
@@ -32,7 +32,7 @@ function createSearch(): JQuery<HTMLElement> {
 function updateSearch(
 	root: JQuery<HTMLElement>,
 	searches: Observable<string>
-): Observable<SideEffect> {
+): Component {
 	const creation = of(createSideEffect(create, root));
 
 	const ui = creation.pipe(switchMap(se => se.completed), share());
@@ -44,14 +44,19 @@ function updateSearch(
 	);
 
 	const uiUpdates = searches.pipe(
-		withLatestFrom(searchInput, (search, el) => ({ search, el })),
-		filter(({ search, el }) => el.val() !== search),
-		map(({ search, el }) =>
+		withLatestFrom(searchInput),
+		filter(([ search, el ]) => el.val() !== search),
+		map(([ search, el ]) =>
 			createSideEffect((searchStr, el) => el.val(searchStr), search, el)
 		)
 	);
 
-	return merge(creation, searcheStateUpdates, uiUpdates);
+	return {
+		updates: merge(creation, searcheStateUpdates, uiUpdates),
+		events(event: string) {
+			return ui.pipe(switchMap(el => fromEvent(el, event)));
+		},
+	};
 }
 
 function create(rootEl: Element) {

@@ -1,127 +1,89 @@
-import { DOMSource, ul, VNode } from '@cycle/dom';
-import isolate from '@cycle/isolate';
-import * as _ from 'lodash';
-import 'rxjs/add/operator/combineAll';
-import 'rxjs/add/operator/let';
-import 'rxjs/add/operator/mapTo';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/shareReplay';
-import { Observable } from 'rxjs/Observable';
-import {
-	Category,
-	CategoryProps,
-	CategorySinks,
-	CategorySources,
-} from './category';
-import {
-	Action,
-	ActionDescriptor,
-	Reducer,
-	StateSource,
-} from '../state/action';
-import {
-	categoriesReducer,
-	CategoriesState,
-	categoryActions,
-} from '../state/categories';
+import { Iterable as It } from '@reactivex/ix-es2015-cjs';
+import { empty, merge, Observable, of } from 'rxjs';
+import { category } from './category';
+import { Component, Element } from './types';
+import { iterateObect } from '../utils';
+import { createSideEffect } from '../utils/side-effects';
+import { CategoryAction, update, CategoriesState } from '../state';
 import {
 	CategoryData,
 	CategoryName,
-	categories,
+	categories as allCategories,
 	CategoryDisplay,
 } from '../data/categories';
+import jQuery = require('jquery');
+import {
+	share,
+	withLatestFrom,
+	mergeMap,
+	map,
+	switchMap,
+	mapTo,
+} from 'rxjs/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
-// export type CategoriesState = Record<CategoryName, boolean>;
 
-interface CategoriesSources {
-	DOM: DOMSource;
-	state: StateSource<CategoriesState>;
-}
-interface CategoriesSinks {
-	DOM: Observable<VNode>;
-	state: Observable<Reducer<CategoriesState>>;
-}
+export function categories(
+	root: Element,
+	state: Observable<CategoriesState>
+): Component {
+	const creation = of(
+		createSideEffect(root => {
+			const result = categoriesView();
+			root.append(result);
 
-export interface IsolatedSources {
-	DOM: DOMSource;
-	state: StateSource<any>;
-}
-export interface IsolatedSinks {
-	DOM: Observable<VNode>;
-	state: Observable<Reducer<any>>;
-}
-export type CategoriesComponent = (sources: IsolatedSources) => IsolatedSinks;
-export function makeCategories(scope: string | object): CategoriesComponent {
-	return isolate(Categories, scope);
-}
-function Categories(sources: CategoriesSources): CategoriesSinks {
-	const { categoriesDOM, clicks } = intent(sources);
+			return result;
+		}, root)
+	).pipe(share());
 
-	return {
-		DOM: categoriesDOM.map(categoies => categoriesView(categoies)),
-		state: clicks.let(categoriesReducer),
-	};
-}
+	const ui = creation.pipe(switchMap(se => se.completed));
 
-interface Intentions {
-	categoriesDOM: Observable<VNode[]>;
-	clicks: Observable<ActionDescriptor<CategoryName | undefined>>;
-}
-interface CategoriesSink {
-	name: CategoryName;
-	category: CategorySinks;
-}
-function intent({ DOM, state }: CategoriesSources): Intentions {
-	const categoriesDOM = DOM.select('ul.container-fluid');
+	const displayState = state.pipe(map(displayOutOfState), share());
 
-	const categoriesSinks: Observable<CategoriesSink[]> = state.state$
-		.filter(state => !!state)
-		.map(displayOutOfState)
-		.map(categoryDisplay =>
-			_(categoryDisplay)
-				.toPairs()
-				.map(([ name, { description, display: initialDisplay }
-				]: [CategoryName, DataWithDisplay]) => ({
-					name,
-					category: Category({
-						DOM: categoriesDOM,
-						props: {
-							name,
-							display: categoryDisplay[name].display,
-							description: categoryDisplay[name].description,
-						},
-					}),
-				}))
-				.value()
-		)
-		.shareReplay();
+	const categoriesHandling = displayState.pipe(
+		withLatestFrom(ui),
+		mergeMap(([ state, root ]) => {
+			const categories = iterateObect(state).map(([ name ]) => {
+				const catState = displayState.pipe(map(state => state[name]));
 
-	return {
-		categoriesDOM: categoriesSinks.map(catSinks =>
-			catSinks.map(({ category }) => category.DOM)
-		),
+				return category(name, root, catState);
+			});
 
-		clicks: categoriesSinks
-			.switchMap(sinks =>
-				Observable.from(sinks).mergeMap(({ name, category }) =>
-					category.clicks.mapTo(name)
+			const catView = merge(...categories.map(cat => cat.updates));
+			const catEvents = merge(
+				...categories.map(cat =>
+					cat.events('click').pipe(mapTo(cat.name))
 				)
-			)
-			.map(name => categoryActions.categoryClicked(name)),
+			).pipe(
+				map(
+					clickedCat =>
+						({
+							name: 'categoryClicked',
+							payload: clickedCat,
+						} as CategoryAction)
+				),
+				map(action => createSideEffect(update, action))
+			);
+
+			return merge(catView, catEvents);
+		})
+	);
+
+	return {
+		updates: categoriesHandling,
+		events: () => empty(),
 	};
 }
+
+type StateWithDisplay = Record<CategoryName, DataWithDisplay>;
 
 function displayOutOfState({
 	effects,
 	usage,
-}: CategoriesState): Record<CategoryName, DataWithDisplay> {
-	return _(effects).concat(usage).map(withCatData).reduce((
+}: CategoriesState): StateWithDisplay {
+	return It.from(effects).concat(usage).map(withCatData).reduce((
 		catDisplay,
-		[
-			name,
-			dataWithDisplay,
-		]
+		[ name, dataWithDisplay ]
 	) => {
 		catDisplay[name] = dataWithDisplay;
 
@@ -136,12 +98,12 @@ function displayOutOfState({
 			name,
 			{
 				display,
-				...categories[name],
+				...allCategories[name],
 			},
 		];
 	}
 }
 
-function categoriesView(categories: VNode[]): VNode {
-	return ul('.container-fluid', {}, categories);
+function categoriesView(): Element {
+	return jQuery(`<ul class="container-fluid"></ul>`);
 }
