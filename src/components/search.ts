@@ -13,7 +13,7 @@ import {
 } from 'rxjs/operators';
 import JQuery = require('jquery');
 
-export function searchComponent(root: Element): Component {
+export function search(root: Element): Component {
 	return updateSearch(
 		root,
 		searchStore.state.pipe(map(state => state.search))

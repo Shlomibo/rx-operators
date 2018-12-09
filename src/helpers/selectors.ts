@@ -26,7 +26,8 @@ function asSelector<T extends string>(
 
 		selector = selector.trim().replace(/[^\w-_]/g, '-');
 
-		selector = prefix + (selector[0] === '-' ? selector.substr(1) : selector);
+		selector =
+			prefix + (selector[0] === '-' ? selector.substr(1) : selector);
 
 		if (!isSelector(selector)) {
 			throw new Error('Conversion to class selector failed');
@@ -40,6 +41,8 @@ function joinSelectors<T extends string>(
 	createSelector: (selector: string) => T
 ) {
 	return function joinSelectors(...selectors: string[]) {
-		return selectors.map(selector => createSelector(selector)).join('') as T;
+		return selectors
+			.map(selector => createSelector(selector))
+			.join('') as T;
 	};
 }

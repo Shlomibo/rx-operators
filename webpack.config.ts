@@ -7,9 +7,7 @@ import * as confMerge from 'webpack-merge';
 const publicPath = resolve(__dirname, 'public');
 
 const baseConf: Configuration = {
-	entry: [
-		'./app.ts',
-	],
+	entry: [ './app.ts' ],
 	context: __dirname,
 	output: {
 		filename: 'app.js',
@@ -17,41 +15,27 @@ const baseConf: Configuration = {
 		publicPath: './',
 	},
 	resolve: {
-		extensions: [
-			'.ts',
-			'.tsx',
-			'.js',
-			'.jsx',
-		],
-		modules: [
-			'node_modules',
-		],
+		extensions: [ '.ts', '.tsx', '.js', '.jsx' ],
+		modules: [ 'node_modules' ],
 	},
 	module: {
 		rules: [
 			{
 				test: /\.html$/,
-				use: [
-					{ loader: 'html-loader' },
-				],
+				use: [ { loader: 'html-loader' } ],
 			},
 			{
 				test: /\.less$/,
 				use: ExtractText.extract({
 					fallback: 'style-loader',
-					use: [
-						'css-loader',
-						'less-loader',
-					],
+					use: [ 'css-loader', 'less-loader' ],
 				}),
 			},
 			{
 				test: /\.css$/,
 				use: ExtractText.extract({
 					fallback: 'style-loader',
-					use: [
-						'css-loader',
-					],
+					use: [ 'css-loader' ],
 				}),
 			},
 			{
@@ -100,10 +84,10 @@ const baseConf: Configuration = {
 		}),
 	],
 };
-export default function(env: string, argv: string[]) {
+export default (env: string, argv: string[]) => {
 	env = env || 'development';
 	// tslint:disable-next-line:no-var-requires
 	const envConf = require(`./config/${env}.webpack.config`);
 
 	return confMerge(baseConf, envConf);
-}
+};

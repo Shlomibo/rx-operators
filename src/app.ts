@@ -1,11 +1,15 @@
-import { makeDOMDriver } from '@cycle/dom';
-import { run } from '@cycle/rxjs-run';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'core-js/shim';
-import onionify from 'cycle-onionify';
-import { App } from './components/app';
+import { fromEvent } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { application } from './components/app';
 import './style/style.less';
+import jQuery = require('jquery');
 
-const statefullApp = onionify(App, 'state');
-
-run(statefullApp, { DOM: makeDOMDriver('#app') });
+fromEvent(document, 'DOMContentLoaded')
+	.pipe(switchMap(_ => application(jQuery('body')).updates))
+	.subscribe(
+		se => se(),
+		err => console.error(err),
+		() => console.warn('backbone collapsed')
+	);
