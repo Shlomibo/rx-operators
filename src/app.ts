@@ -3,7 +3,7 @@ import 'core-js/shim';
 import { fromEvent } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { application } from './components/app';
-import './style/style.less';
+import '../style/style.less';
 import jQuery = require('jquery');
 
 fromEvent(document, 'DOMContentLoaded')

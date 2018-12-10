@@ -7,7 +7,7 @@ import { filteringOperators } from './filtering';
 import { multicastOperators } from './multicast';
 import { transformationOperators } from './transformation';
 import { utilityOperators } from './utility';
-import '../img';
+import '../../img';
 import { iterateObect } from '../utils/index';
 import { categories as catDefinition, CategoryName } from './categories';
 

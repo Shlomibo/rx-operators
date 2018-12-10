@@ -1,14 +1,3 @@
-import { Iterable as It } from '@reactivex/ix-es2015-cjs';
-import * as _ from 'lodash';
-import { Observable, Observer, Subject } from 'rxjs';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/merge';
-import 'rxjs/add/operator/multicast';
-import 'rxjs/add/operator/partition';
-import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/startWith';
 import { iterateObect } from '../utils/index';
 
 export type CategoryName =
