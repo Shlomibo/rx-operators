@@ -21,7 +21,8 @@ export function search(root: Element): Component {
 }
 
 function createSearch(): JQuery<HTMLElement> {
-	return JQuery(`<div class="input-group">
+	return JQuery(/*html*/ `
+	<div class="input-group">
 	  <span class="input-group-addon">
 	    <span class="glyphicon glyphicon-search"></span>
 	  </span>

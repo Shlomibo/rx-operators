@@ -23,7 +23,7 @@ export function operators(
 		createSideEffect(
 			(root, el) => root.append(el),
 			root,
-			jQuery('<ul class="operators"></ul>')
+			jQuery(/*html*/ `<ul class="operators"></ul>`)
 		)
 	);
 

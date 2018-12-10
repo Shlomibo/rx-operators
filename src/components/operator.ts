@@ -184,7 +184,8 @@ function createOperatorView(
 	playWithUrl: string | undefined,
 	state: OperatorProps
 ): Element {
-	const result = jQuery(`<li id="${id}" class="operator panel panel-default">
+	const result = jQuery(/*html*/ `
+	<li id="${id}" class="operator panel panel-default">
 	  <div class="panel-heading container-fluid">
 		<div class="col-sm-6 col-lg-5">
 			<ul class="categories"></ul>
@@ -218,7 +219,7 @@ interface CategoryMarker {
 
 function categoryMarker({ name, isActive }: CategoryMarker): Element {
 	const result = jQuery(
-		`<li class="category cat-${name}" title="${name}"></li>`
+		/*html*/ `<li class="category cat-${name}" title="${name}"></li>`
 	);
 
 	return isActive
@@ -238,13 +239,13 @@ function operatorDisplay(
 	const imgUI =
 		imgSource &&
 		jQuery(
-			`<img class="col-sm-6 image-rounded" src="./img/${imgSource}" />`
+			/*html*/ `<img class="col-sm-6 image-rounded" src="./img/${imgSource}" />`
 		);
 
 	const playWithLink =
 		playWithUrl &&
 		jQuery(
-			`<a href="${playWithUrl}" title="Play with operator on RxJS Marbles" target="_blank"></a>`
+			/*html*/ `<a href="${playWithUrl}" title="Play with operator on RxJS Marbles" target="_blank"></a>`
 		);
 
 	if (imgUI && playWithLink) {
@@ -253,8 +254,8 @@ function operatorDisplay(
 
 	const imgChildren = !!imgUI ? [ playWithLink || imgUI ] : [];
 
-	const result = jQuery(`<div class="operator-desc container-fluid ${selector ||
-		''}">
+	const result = jQuery(/*html*/ `
+	<div class="operator-desc container-fluid ${selector || ''}">
 	  <div class="col-sm-${descColCount}">${html || ''}</div>
 	</div>`);
 

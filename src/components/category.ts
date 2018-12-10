@@ -83,7 +83,8 @@ function createCategoryView(
 	name: CategoryName,
 	{ description, display }: CategoryProps
 ) {
-	const result = jQuery(`<li title="${name}" alt="${description}">
+	const result = jQuery(/*html*/ `
+	<li title="${name}" alt="${description}">
 	  class="category btn ${catgoryClassName(name)}"
 	  ${name}
 	</li>`);

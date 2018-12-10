@@ -102,5 +102,5 @@ function displayOutOfState({
 }
 
 function categoriesView(): Element {
-	return jQuery(`<ul class="container-fluid"></ul>`);
+	return jQuery(/*html*/ `<ul class="container-fluid"></ul>`);
 }

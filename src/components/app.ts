@@ -79,7 +79,8 @@ interface AppView {
 }
 
 function createView(state: AppState): AppView {
-	const result = jQuery(`<div>
+	const result = jQuery(/*html*/ `
+	<div>
 	  <nav class="navbar navbar-default navbar-fixed-top">
 		<div class="container">
 		  <h5 class="col-md-8">RX operators</h5>
