@@ -1,6 +1,16 @@
-import { Observable, AsyncSubject, OperatorFunction } from 'rxjs';
-import { first, takeUntil, map } from 'rxjs/operators';
+import { merge, AsyncSubject, OperatorFunction, of, never } from 'rxjs';
+import {
+	first,
+	takeUntil,
+	map,
+	switchMap,
+	defaultIfEmpty,
+	catchError,
+	startWith,
+	reduce,
+} from 'rxjs/operators';
 import { OneOrMany } from './types';
+import { Observable } from 'rxjs';
 
 export interface SideEffectMetadata {
 	[key: string]: any;
@@ -29,6 +39,7 @@ export interface TypedSideEffect<TArgs extends any[], T> extends SideEffect<T> {
 }
 
 const sideEffects = new WeakSet<SideEffect>();
+const cancellations = new WeakMap<SideEffect, Observable<any>>();
 
 /**
  * Creates side effect function, that can be introspcted, and having side-effect-completion observable
@@ -126,6 +137,11 @@ export function createSideEffect<TArgs extends any[], T = any>(
 	});
 
 	sideEffects.add(sideEffectFunc as any);
+	cancellations.set(
+		sideEffectFunc as any,
+		(sideEffectFunc as SideEffect).cancelled
+	);
+
 	return sideEffectFunc as TypedSideEffect<TArgs, T>;
 
 	/**
@@ -161,7 +177,12 @@ export function createSideEffect<TArgs extends any[], T = any>(
 // tslint:disable-next-line:no-namespace
 export namespace createSideEffect {
 	export function from<T>(val: T): TypedSideEffect<[T], T> {
-		return createSideEffect(val => val, val);
+		const result = createSideEffect(val => val, val);
+
+		// Technochally - its pure
+		result();
+
+		return result;
 	}
 
 	export function cancelled<T>(): SideEffect<T> {
@@ -228,89 +249,77 @@ export function bind<T, R>(
 	projection: (item: T) => R | SideEffect<R>,
 	failureHandling?: FailureHandling<T>
 ): OperatorFunction<SideEffect<T>, SideEffect<R>> {
-	return obs => obs.pipe(map(firstSE => combineSEs(firstSE, projection)));
+	return obs => {
+		let resultsObs = obs.pipe(switchMap(se => se.completed));
 
-	function combineSEs(
-		firstSE: SideEffect<T>,
-		secondSE: (item: T) => R | SideEffect<R>
-	): SideEffect<R> {
-		const result = createSideEffect((...args) => {
-			let seResult: T;
+		if (failureHandling) {
+			if (failureHandling.ifCancelled) {
+				const cancelHandling = failureHandling.ifCancelled();
 
-			try {
-				if (!firstSE.cancelled) {
-					firstSE();
-					seResult = firstSE.resultFromRanEffect();
+				if (cancelHandling) {
+					resultsObs = resultsObs.pipe(
+						defaultIfEmpty(cancelHandling.item)
+					);
 				}
-				else {
-					if (!failureHandling || !failureHandling.ifCancelled) {
-						cancelResult();
-						return;
-					}
-					else {
-						const handlingResult = failureHandling.ifCancelled();
-
-						if (!handlingResult) {
-							cancelResult();
-							return;
-						}
-
-						seResult = handlingResult.item;
-					}
-				}
-			} catch (err) {
-				if (!failureHandling || !failureHandling.ifFailed) {
-					throw err;
-				}
-
-				seResult = failureHandling.ifFailed(err);
 			}
 
-			const secondSEOrVal = secondSE(seResult);
-
-			if (!createSideEffect.isSideEffect(secondSEOrVal)) {
-				return secondSEOrVal;
+			if (failureHandling.ifFailed) {
+				resultsObs = resultsObs.pipe(
+					catchError(err =>
+						resultsObs.pipe(
+							startWith(failureHandling.ifFailed!(err))
+						)
+					)
+				);
 			}
-			else {
-				secondSEOrVal();
-				return secondSEOrVal.resultFromRanEffect();
-			}
-		}, ...firstSE.args);
-
-		if (firstSE.cancelled) {
-			result.cancel();
 		}
 
-		return result as SideEffect<R>;
-
-		function cancelResult() {
-			result.cancel();
-		}
-	}
+		return merge(
+			obs.pipe(map(se => suppress(se))),
+			resultsObs.pipe(
+				map(projection),
+				map(
+					resultOrSE =>
+						createSideEffect.isSideEffect(resultOrSE)
+							? resultOrSE
+							: createSideEffect.from(resultOrSE)
+				)
+			)
+		);
+	};
 }
 
-/**
- * Converts a function that receives callback-argument, to a function that returns an observable.
- *
- * @param callbackFunc The function that expects a callback
- * @returns A function that receive the same number of arguments as the source-function (except of the callback)
- *    and when called, calls the supplied function immidiately (unlike bindCallback), and returns an Observable
- */
-export function hotBindCallback<TArgs extends any[], TResults extends any[]>(
-	fn: (cb: (...results: TResults[]) => void, ...args: TArgs) => void
-): (...args: TArgs) => Observable<OneOrMany<TResults>> {
-	return (...args) => {
-		const doneSubject = new AsyncSubject<OneOrMany<TResults>>();
-		try {
-			fn((...results: TResults) => {
-				const result = results.length === 1 ? results[0] : results;
-				doneSubject.next(result);
-				doneSubject.complete();
-			}, ...args);
-		} catch (err) {
-			doneSubject.error(err);
-		}
+const suppressedSEs = new WeakSet<SideEffect>();
 
-		return doneSubject.pipe(first());
-	};
+function suppress<T>(se: SideEffect<T>): SideEffect<never>;
+function suppress<TArgs extends any[], T>(
+	se: TypedSideEffect<TArgs, T>
+): TypedSideEffect<TArgs, never>;
+function suppress<TArgs extends any[], T>(
+	se: TypedSideEffect<TArgs, T>
+): TypedSideEffect<TArgs, never> {
+	if (suppressedSEs.has(se)) {
+		return se as any;
+	}
+
+	const result = createSideEffect(
+		se.metadata,
+		(...args: TArgs) => se(),
+		...se.args
+	);
+
+	suppressedSEs.add(result);
+
+	cancellations.get(se)!
+		.pipe(
+			// some() ... WTF?!
+			reduce((x, y) => true, false)
+		)
+		.toPromise()
+		.then(() => result.cancel());
+
+	result.cancelled = never();
+	result.completed = never();
+
+	return result as TypedSideEffect<TArgs, never>;
 }
