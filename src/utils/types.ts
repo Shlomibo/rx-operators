@@ -38,3 +38,5 @@ export type ArgTypes<T, TFunc extends (arg: T, ...args: any[]) => any, TFuncs ex
 	: TFuncs extends [infer T1] ?
 		[FirstArg<T1, TAlt>]
 	: T[];
+
+export type TypeCondition<T, TCompared, TTrue, TFalse = never> = T extends TCompared ? TTrue : TFalse;

@@ -6,7 +6,12 @@ import { getParser } from '../markdown';
 import { CategoriesState, DisplaySelection } from '../state/categories';
 import { operatorHandling, OperatorState } from '../state/operators';
 import { StateView } from '../state/store';
-import { createSideEffect } from '../utils/side-effects';
+import {
+	createSideEffect,
+	bind,
+	lift,
+	combineSideEffects,
+} from '../utils/side-effects';
 import { Entry } from '../utils/types';
 import {
 	categories as allCategories,
@@ -124,20 +129,21 @@ export function operator(
 		first(),
 		map(([ , el ]) =>
 			createSideEffect((root, el) => root.append(el), root, el)
-		),
-		switchMap(se => se.completed)
+		)
 	);
 
-	const stateUpdates = uiAttachment.pipe(
+	const stateUpdates = bind(
+		uiAttachment,
 		switchMap(el => fromEvent(el.find('.panel-heading'), 'click')),
 		map(ev => ev.target && jQuery(ev.target)),
 		filter(target => !!target && !target.is(`.${SEL_DOCS_LINK}`)),
 		map(el => createSideEffect(updateState, { name: 'collapse' }))
 	);
 
-	const uiUpdates = state.pipe(
-		skip(1),
+	const uiUpdates = bind(
+		lift(state.pipe(skip(1))),
 		withLatestFrom(uiAttachment),
+		map(mixed => combineSideEffects(mixed)),
 		map(([ state, el ]) => createSideEffect(updateView, el, state))
 	);
 

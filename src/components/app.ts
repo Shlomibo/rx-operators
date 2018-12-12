@@ -7,7 +7,7 @@ import { CategoryName } from '../data/categories';
 import { appStateStore as state, searchStore } from '../state';
 import { AppState } from '../state/app';
 import { categoriesStore, operatorsStore, update } from '../state/index';
-import { createSideEffect } from '../utils/side-effects';
+import { createSideEffect, bind } from '../utils/side-effects';
 import jQuery = require('jquery');
 import {
 	distinctUntilChanged,
@@ -41,14 +41,14 @@ export function application(root: Element): Component {
 		categoriesStore.state
 	);
 
-	const uiRoot = viewCreation.pipe(switchMap(se => se.completed), share());
 	const scrolls = fromEvent(window, 'scroll').pipe(
 		debounceTime(100),
 		map(ev => document.documentElement.scrollTop),
 		map(scroll => scroll > 50),
 		distinctUntilChanged()
 	);
-	const uiUpdates = uiRoot.pipe(
+	const uiUpdates = bind(
+		viewCreation,
 		withLatestFrom(scrolls),
 		map(([ el, isScrolled ]) =>
 			createSideEffect(update, {
@@ -61,7 +61,6 @@ export function application(root: Element): Component {
 	return {
 		updates: merge(
 			uiUpdates,
-			viewCreation,
 			searchComp.updates,
 			categoriesComp.updates,
 			operatorsComp.updates

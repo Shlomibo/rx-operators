@@ -3,7 +3,7 @@ import { merge, Observable, of } from 'rxjs';
 import { map, share, switchMap } from 'rxjs/operators';
 import { operator } from './operator';
 import { Component, Element } from './types';
-import { createSideEffect } from '../utils/side-effects';
+import { createSideEffect, bind } from '../utils/side-effects';
 import { OperatorData, operators as allOperators } from '../data/operators';
 import jQuery = require('jquery');
 import {
@@ -19,15 +19,13 @@ export function operators(
 	search: Observable<string>,
 	categories: Observable<CategoriesState>
 ): Component {
-	const creation = of(
+	const uiRoot = of(
 		createSideEffect(
 			(root, el) => root.append(el),
 			root,
 			jQuery(/*html*/ `<ul class="operators"></ul>`)
 		)
-	);
-
-	const uiRoot = creation.pipe(switchMap(se => se.completed), share());
+	).pipe(share());
 
 	const opNames = It.from(Object.keys(operators.current));
 
@@ -41,7 +39,8 @@ export function operators(
 				]
 		)
 		.map(([ name, opState, opData ]) =>
-			uiRoot.pipe(
+			bind(
+				uiRoot,
 				map(root =>
 					operator(
 						root,
@@ -60,9 +59,8 @@ export function operators(
 
 	return {
 		updates: merge(
-			creation,
 			...opComponents.map(compObservable =>
-				compObservable.pipe(switchMap(comp => comp.updates))
+				bind(compObservable, switchMap(comp => comp.updates))
 			)
 		),
 	};

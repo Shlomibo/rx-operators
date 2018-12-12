@@ -3,7 +3,12 @@ import { empty, merge, Observable, of } from 'rxjs';
 import { category } from './category';
 import { Component, Element } from './types';
 import { iterateObect } from '../utils';
-import { createSideEffect } from '../utils/side-effects';
+import {
+	createSideEffect,
+	combineSideEffects,
+	bind,
+	lift,
+} from '../utils/side-effects';
 import { CategoryAction, update, CategoriesState } from '../state';
 import {
 	CategoryData,
@@ -36,12 +41,14 @@ export function categories(
 		}, root)
 	).pipe(share());
 
-	const ui = creation.pipe(switchMap(se => se.completed));
+	// const ui = creation.pipe(switchMap(se => se.completed));
 
 	const displayState = state.pipe(map(displayOutOfState), share());
 
-	const categoriesHandling = displayState.pipe(
-		withLatestFrom(ui),
+	const categoriesHandling = bind(
+		lift(displayState),
+		withLatestFrom(creation),
+		map(mixed => combineSideEffects(mixed)),
 		mergeMap(([ state, root ]) => {
 			const categories = iterateObect(state).map(([ name ]) => {
 				const catState = displayState.pipe(map(state => state[name]));
