@@ -8,6 +8,8 @@ import {
 	pipe,
 	combineLatest,
 	race,
+	isObservable,
+	Subject,
 } from 'rxjs';
 import {
 	first,
@@ -48,6 +50,7 @@ export interface SideEffect<T = any> {
 	metadata: SideEffectMetadata;
 	resultFromRanEffect(throwIfDidntRun?: true): T;
 	resultFromRanEffect(throwIfDidntRun: false): T | undefined;
+	readonly didRun: boolean;
 }
 export interface TypedSideEffect<TArgs extends any[], T> extends SideEffect<T> {
 	args: TArgs;
@@ -79,19 +82,15 @@ class FunctioningFunctionalSide<T> implements FunctionalSide<T> {
 		this.cancelled = this._cancellation.asObservable();
 
 		if (chainedFunctionality) {
-			this.completed = merge(
+			this.completed = combineLatest(
 				this.completed,
-				chainedFunctionality.completed.pipe(
-					materialize(),
-					filter(({ kind }) => kind !== 'next'),
-					dematerialize()
-				)
+				chainedFunctionality.completed,
+				thisCompletion => thisCompletion
 			);
 
-			this.cancelled = merge(
+			this.cancelled = race(
 				this.cancelled,
-				chainedFunctionality.cancelled,
-				first()
+				chainedFunctionality.cancelled
 			);
 		}
 	}
@@ -133,16 +132,49 @@ class SuppressedFunctionalSide<T> implements FunctionalSide<T> {
 	public result(item: T) {}
 }
 
+type ResultOrFunctional<T> =
+	| {
+			functional?: undefined;
+			result: T;
+		}
+	| {
+			functional: FunctionalSide<T>;
+		};
+
 class MergedFunctionalSide<T1, T2> implements FunctionalSide<[T1, T2]> {
 	public readonly completed: Observable<[T1, T2]>;
 	public readonly cancelled: Observable<true>;
 
 	constructor(
-		private readonly first: FunctionalSide<T1>,
-		private readonly second: FunctionalSide<T2>
+		private readonly first: ResultOrFunctional<T1>,
+		private readonly second: ResultOrFunctional<T2>
 	) {
-		this.completed = combineLatest(first.completed, second.completed);
-		this.cancelled = race(first.cancelled, second.cancelled);
+		if (!first.functional && !second.functional) {
+			this.completed = of([ first.result, second.result ] as [T1, T2]);
+			this.cancelled = empty();
+		}
+		else if (first.functional && second.functional) {
+			this.completed = combineLatest(
+				first.functional.completed,
+				second.functional.completed
+			);
+			this.cancelled = race(
+				first.functional.cancelled,
+				second.functional.cancelled
+			);
+		}
+		else if (first.functional) {
+			this.completed = first.functional.completed.pipe(
+				map(item => [ item, (second as any).result ] as [T1, T2])
+			);
+			this.cancelled = first.functional.cancelled;
+		}
+		else {
+			this.completed = second.functional!.completed.pipe(
+				map(item => [ (first as any).result, item ] as [T1, T2])
+			);
+			this.cancelled = second.functional!.cancelled;
+		}
 	}
 
 	public clone() {
@@ -150,20 +182,35 @@ class MergedFunctionalSide<T1, T2> implements FunctionalSide<[T1, T2]> {
 	}
 
 	public cancel() {
-		this.first.cancel();
-		this.second.cancel();
+		if (this.first.functional) {
+			this.first.functional.cancel();
+		}
+
+		if (this.second.functional) {
+			this.second.functional.cancel();
+		}
 	}
 
 	public error(err: any) {
-		this.first.error(err);
-		this.second.error(err);
+		if (this.first.functional) {
+			this.first.functional.error(err);
+		}
+
+		if (this.second.functional) {
+			this.second.functional.error(err);
+		}
 	}
 
 	public result(result: [T1, T2]) {
 		const [ first, second ] = result;
 
-		this.first.result(first);
-		this.second.result(second);
+		if (this.first.functional) {
+			this.first.functional.result(first);
+		}
+
+		if (this.second.functional) {
+			this.second.functional.result(second);
+		}
 	}
 }
 
@@ -272,6 +319,11 @@ function buildSideEffect<TArgs extends any[], T>(
 
 			return result();
 		},
+	});
+
+	Object.defineProperty(sideEffectFunc, 'didRun', {
+		configurable: true,
+		get: () => didRun,
 	});
 
 	sideEffects.add(sideEffectFunc as any);
@@ -418,7 +470,14 @@ export function bindOperation<T, R>(
 
 		return merge(
 			obs.pipe(map(suppress)),
-			results.pipe(map(createSideEffect.from))
+			results.pipe(
+				map(
+					item =>
+						createSideEffect.isSideEffect(item)
+							? item
+							: createSideEffect.from(item) as any
+				)
+			)
 		);
 	};
 }
@@ -546,33 +605,166 @@ export function bind<T, R>(
 	...operations: OperatorFunction<any, any>[]
 ): Observable<SideEffect<R>>;
 export function bind<T, R>(
-	observable: Observable<SideEffect<T>> | SideEffect<T>,
+	operation1: OperatorFunction<T, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, F, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<F>>,
+	operation7: OperatorFunction<F, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, F, G, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<F>>,
+	operation7: OperatorFunction<F, MaybeSideEffect<G>>,
+	operation8: OperatorFunction<G, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, F, G, H, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<F>>,
+	operation7: OperatorFunction<F, MaybeSideEffect<G>>,
+	operation8: OperatorFunction<G, MaybeSideEffect<H>>,
+	operation9: OperatorFunction<H, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, F, G, H, I, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<F>>,
+	operation7: OperatorFunction<F, MaybeSideEffect<G>>,
+	operation8: OperatorFunction<G, MaybeSideEffect<H>>,
+	operation9: OperatorFunction<H, MaybeSideEffect<I>>,
+	operation10: OperatorFunction<I, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, F, G, H, I, J, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<F>>,
+	operation7: OperatorFunction<F, MaybeSideEffect<G>>,
+	operation8: OperatorFunction<G, MaybeSideEffect<H>>,
+	operation9: OperatorFunction<H, MaybeSideEffect<I>>,
+	operation10: OperatorFunction<I, MaybeSideEffect<J>>,
+	operation11: OperatorFunction<J, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, A, B, C, D, E, F, G, H, I, J, K, R>(
+	operation1: OperatorFunction<T, MaybeSideEffect<A>>,
+	operation2: OperatorFunction<A, MaybeSideEffect<B>>,
+	operation3: OperatorFunction<B, MaybeSideEffect<C>>,
+	operation4: OperatorFunction<C, MaybeSideEffect<D>>,
+	operation5: OperatorFunction<D, MaybeSideEffect<E>>,
+	operation6: OperatorFunction<E, MaybeSideEffect<F>>,
+	operation7: OperatorFunction<F, MaybeSideEffect<G>>,
+	operation8: OperatorFunction<G, MaybeSideEffect<H>>,
+	operation9: OperatorFunction<H, MaybeSideEffect<I>>,
+	operation10: OperatorFunction<I, MaybeSideEffect<J>>,
+	operation11: OperatorFunction<J, MaybeSideEffect<K>>,
+	operation12: OperatorFunction<K, MaybeSideEffect<R>>
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, R>(
 	...operations: OperatorFunction<any, any>[]
-): Observable<SideEffect<R>> {
-	if (operations.length === 0) {
-		return observable as any;
+): OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>>;
+export function bind<T, R>(
+	observableOrOperation:
+		| Observable<SideEffect<T>>
+		| SideEffect<T>
+		| OperatorFunction<any, any>,
+	...operations: OperatorFunction<any, any>[]
+):
+	| Observable<SideEffect<R>>
+	| OperatorFunction<Observable<SideEffect<T>>, Observable<SideEffect<R>>> {
+	let observable: Observable<SideEffect<T>> | undefined;
+
+	if (isObservable(observableOrOperation)) {
+		observable = observableOrOperation;
+	}
+	else if (createSideEffect.isSideEffect(observableOrOperation)) {
+		observable = of(observableOrOperation);
+	}
+	else if (typeof observableOrOperation === 'function') {
+		operations.unshift(observableOrOperation);
+		observable = undefined;
+	}
+	else {
+		throw new Error('Invalid argument');
 	}
 
-	if (createSideEffect.isSideEffect(observable)) {
-		observable = of(observable);
-	}
+	return observable ? bindObservable(observable) : bindObservable as any;
 
-	return operations.reduce((inputObs: Observable<SideEffect>, operation) => {
-		inputObs = share<SideEffect>()(inputObs);
+	function bindObservable(
+		observable: Observable<SideEffect<T>>
+	): Observable<SideEffect<R>> {
+		if (operations.length === 0) {
+			return observable as any;
+		}
 
-		return merge(
-			map(suppress)(inputObs),
-			inputObs.pipe(
-				switchMap(
-					maybeSe =>
-						createSideEffect.isSideEffect(maybeSe)
-							? maybeSe.completed
-							: of(maybeSe)
-				),
-				operation
-			)
+		return operations.reduce(
+			(inputObs: Observable<SideEffect>, operation) => {
+				inputObs = inputObs.pipe(share());
+
+				return merge(
+					inputObs.pipe(filter(se => !se.didRun), map(suppress)),
+					inputObs.pipe(
+						filter(se => !se.metadata[suppressedKey]),
+						switchMap(se => se.completed),
+						operation,
+						map(
+							result =>
+								createSideEffect.isSideEffect(result)
+									? result
+									: createSideEffect.from(result)
+						)
+					)
+				);
+			},
+			observable
 		);
-	}, observable);
+	}
 }
 
 export function lift<T>(
@@ -591,10 +783,10 @@ export function lift<T>(
 function suppress<T>(se: SideEffect<T>): SideEffect<never>;
 function suppress<TArgs extends any[], T>(
 	se: TypedSideEffect<TArgs, T>
-): TypedSideEffect<TArgs, never>;
+): TypedSideEffect<[TypedSideEffect<TArgs, T>], never>;
 function suppress<TArgs extends any[], T>(
 	se: TypedSideEffect<TArgs, T>
-): TypedSideEffect<TArgs, never> {
+): TypedSideEffect<[TypedSideEffect<TArgs, T>], never> {
 	if (se.metadata[suppressedKey]) {
 		return se as any;
 	}
@@ -606,8 +798,8 @@ function suppress<TArgs extends any[], T>(
 			[suppressedKey]: true,
 		},
 		(...args: TArgs) => se() as never,
-		se.args
-	);
+		[ se ] as any
+	) as any;
 }
 
 export function combineSideEffects<T1, T2>(
@@ -631,8 +823,8 @@ export function combineSideEffects<T1, T2>(
 		[ firstOrArgs, maybeSecond ] = firstOrArgs;
 	}
 
-	const first = firstOrArgs,
-		second = maybeSecond;
+	const first = firstOrArgs as MaybeSideEffect<T1>,
+		second = maybeSecond as MaybeSideEffect<T2>;
 
 	if (
 		createSideEffect.isSideEffect(first) &&
@@ -642,9 +834,12 @@ export function combineSideEffects<T1, T2>(
 	}
 	else if (createSideEffect.isSideEffect(first)) {
 		return buildSideEffect(
-			new FunctioningFunctionalSide(first[functionalSideKey]),
+			new MergedFunctionalSide<T1, T2>(
+				{ functional: first[functionalSideKey] },
+				{ result: second as T2 }
+			),
 			{
-				first: first.metadata,
+				...first.metadata,
 				[suppressedKey]: first.metadata[suppressedKey],
 				[pureKey]: first.metadata[pureKey],
 			},
@@ -658,9 +853,12 @@ export function combineSideEffects<T1, T2>(
 	}
 	else if (createSideEffect.isSideEffect(second)) {
 		return buildSideEffect(
-			new FunctioningFunctionalSide(second[functionalSideKey]),
+			new MergedFunctionalSide(
+				{ result: first as T1 },
+				{ functional: second[functionalSideKey] }
+			),
 			{
-				second: second.metadata,
+				...second.metadata,
 				[suppressedKey]: second.metadata[suppressedKey],
 				[pureKey]: second.metadata[pureKey],
 			},
@@ -680,12 +878,12 @@ export function combineSideEffects<T1, T2>(
 function combineSEs<T1, T2>(first: SideEffect<T1>, second: SideEffect<T2>) {
 	return buildSideEffect(
 		new MergedFunctionalSide(
-			first[functionalSideKey],
-			second[functionalSideKey]
+			{ functional: first[functionalSideKey] },
+			{ functional: second[functionalSideKey] }
 		),
 		{
-			first: first.metadata,
-			second: second.metadata,
+			...first.metadata,
+			...second.metadata,
 			[suppressedKey]:
 				first.metadata[suppressedKey] || second.metadata[suppressedKey],
 			[pureKey]: first.metadata[pureKey] && second.metadata[pureKey],

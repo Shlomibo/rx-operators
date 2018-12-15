@@ -13,21 +13,26 @@ import {
 	withLatestFrom,
 	filter,
 	map,
+	combineLatest,
 	switchMap,
 	share,
 	merge as mergeWith,
 } from 'rxjs/operators';
-import JQuery = require('jquery');
+import jQuery = require('jquery');
 
 export function search(root: Element): Component {
 	return updateSearch(
 		root,
-		searchStore.state.pipe(map(state => state.search))
+		searchStore.state.pipe(
+			map(state => {
+				return state.search;
+			})
+		)
 	);
 }
 
 function createSearch(): JQuery<HTMLElement> {
-	return JQuery(/*html*/ `
+	return jQuery(/*html*/ `
 	<div class="input-group">
 	  <span class="input-group-addon">
 	    <span class="glyphicon glyphicon-search"></span>
@@ -42,23 +47,31 @@ function updateSearch(
 ): Component {
 	const creation = bind(
 		createSideEffect(create, root),
-		map(root => root.find('input.search'))
+		map(root => {
+			return root.find('input.search');
+		})
+	).pipe(share());
+
+	const searcheStateUpdates = bind(
+		creation,
+		switchMap(input =>
+			searchStateFromInput(input as JQuery<HTMLInputElement>, searches)
+		)
 	);
 
-	const searcheStateUpdates = bind(creation, switchMap(searchStateFromInput));
-
 	const uiUpdates = bind(
-		searches.pipe(map(createSideEffect.from)),
-		withLatestFrom(creation),
-		map(mixed => combineSideEffects(mixed)),
-		filter(([ search, el ]) => el.val() !== search),
-		map(([ search, el ]) =>
+		creation,
+		combineLatest(searches),
+		filter(([ el, search ]) => {
+			return el.val() !== search;
+		}),
+		map(([ el, search ]) =>
 			createSideEffect((searchStr, el) => el.val(searchStr), search, el)
 		)
 	);
 
 	return {
-		updates: merge(searcheStateUpdates, uiUpdates),
+		updates: merge(uiUpdates, searcheStateUpdates),
 	};
 }
 
@@ -69,10 +82,16 @@ function create(rootEl: Element) {
 	return search;
 }
 
-function searchStateFromInput(input: JQuery<HTMLInputElement>) {
+function searchStateFromInput(
+	input: JQuery<HTMLInputElement>,
+	searches: Observable<string>
+) {
 	const onInput = fromEvent(input, 'input').pipe(
 		debounceTime(250),
 		map(ev => jQuery(ev.currentTarget as HTMLInputElement).val()),
+		withLatestFrom(searches),
+		filter(([ ui, state ]) => ui !== state),
+		map(([ ui ]) => ui),
 		map<string, SearchAction>(search => ({
 			name: 'search',
 			payload: search,
@@ -81,6 +100,8 @@ function searchStateFromInput(input: JQuery<HTMLInputElement>) {
 	const onKeydown = fromEvent(input, 'keydown').pipe(
 		map((ev: KeyboardEvent) => ev.key),
 		filter(key => key === 'Escape'),
+		withLatestFrom(searches),
+		filter(([ , state ]) => '' !== state),
 		map<any, SearchAction>(() => ({ name: 'reset' }))
 	);
 

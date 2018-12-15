@@ -24,6 +24,7 @@ import {
 	map,
 	switchMap,
 	mapTo,
+	combineLatest,
 } from 'rxjs/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
@@ -41,15 +42,12 @@ export function categories(
 		}, root)
 	).pipe(share());
 
-	// const ui = creation.pipe(switchMap(se => se.completed));
-
 	const displayState = state.pipe(map(displayOutOfState), share());
 
 	const categoriesHandling = bind(
-		lift(displayState),
-		withLatestFrom(creation),
-		map(mixed => combineSideEffects(mixed)),
-		mergeMap(([ state, root ]) => {
+		creation,
+		combineLatest(displayState),
+		mergeMap(([ root, state ]) => {
 			const categories = iterateObect(state).map(([ name ]) => {
 				const catState = displayState.pipe(map(state => state[name]));
 

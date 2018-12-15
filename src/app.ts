@@ -9,7 +9,9 @@ import jQuery = require('jquery');
 fromEvent(document, 'DOMContentLoaded')
 	.pipe(switchMap(_ => application(jQuery('body')).updates))
 	.subscribe(
-		se => se(),
+		se => {
+			se();
+		},
 		err => console.error(err),
 		() => console.warn('backbone collapsed')
 	);

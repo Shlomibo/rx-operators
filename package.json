@@ -6,7 +6,7 @@
 	"typings": "declarations",
 	"scripts": {
 		"build": "webpack -d --progress",
-		"watch": "npm run build -- --watch",
+		"watch": "npm run build -- --define process.env.NODE_ENV=\"develeopment\" --watch",
 		"release": "webpack --env production --define process.env.NODE_ENV=\"production\" --progress"
 	},
 	"author": "Shlomi Borovitz",

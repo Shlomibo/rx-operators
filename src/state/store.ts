@@ -1,6 +1,6 @@
 import { Key, KeyOf, Merge, ArgTypes } from '../utils/types';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 
 export interface Action<TAction extends string, TPayload = unknown> {
 	name: TAction;
