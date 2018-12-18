@@ -1,11 +1,10 @@
 import * as ExtractCSS from 'mini-css-extract-plugin';
 import { resolve } from 'path';
-import { Configuration, EnvironmentPlugin } from 'webpack';
+import { Configuration } from 'webpack';
 import * as confMerge from 'webpack-merge';
 
 // tslint:disable-next-line:variable-name no-var-requires
 const ExtractHtml: any = require('html-webpack-plugin');
-const publicPath = resolve(__dirname, 'public');
 
 const baseConf: Configuration = {
 	entry: [ './app.ts' ],
@@ -76,10 +75,6 @@ const baseConf: Configuration = {
 		new ExtractHtml({
 			title: 'RX operators',
 			template: '../index.html',
-		}),
-		new EnvironmentPlugin({
-			NODE_ENV: 'development',
-			DEBUG: true,
 		}),
 	],
 };

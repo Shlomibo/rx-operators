@@ -1,4 +1,4 @@
-import { merge, materialize, dematerialize } from 'rxjs/operators';
+import { merge } from 'rxjs/operators';
 import { Observable, Observer, Subject, Subscription } from 'rxjs';
 
 export type ObservableMerger<T> = (source: Observable<T>) => Subscription;

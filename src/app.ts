@@ -7,7 +7,7 @@ import '../style/style.less';
 import jQuery = require('jquery');
 
 fromEvent(document, 'DOMContentLoaded')
-	.pipe(switchMap(_ => application(jQuery('body')).updates))
+	.pipe(switchMap(x => application(jQuery('body')).updates))
 	.subscribe(
 		se => {
 			se();

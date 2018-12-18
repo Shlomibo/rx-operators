@@ -1,6 +1,6 @@
 import { Key, KeyOf, Merge, ArgTypes } from '../utils/types';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { map, distinctUntilChanged } from 'rxjs/operators';
 
 export interface Action<TAction extends string, TPayload = unknown> {
 	name: TAction;
@@ -20,7 +20,7 @@ export abstract class StateView<T> {
 	public abstract readonly current: T;
 
 	constructor(state: Observable<T>) {
-		this.state = state;
+		this.state = state.pipe(distinctUntilChanged());
 	}
 
 	public select<TKey extends Key>(key: TKey): StateView<KeyOf<T, TKey>> {

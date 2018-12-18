@@ -9,7 +9,7 @@ import { transformationOperators } from './transformation';
 import { utilityOperators } from './utility';
 import '../../img';
 import { iterateObect } from '../utils/index';
-import { categories as catDefinition, CategoryName } from './categories';
+import { CategoryName } from './categories';
 
 export interface OperatorData {
 	categories: CategoryName[];
@@ -19,7 +19,6 @@ export interface OperatorData {
 	description: string;
 }
 
-const categories = Object.keys(catDefinition) as CategoryName[];
 export type Operators = Record<string, OperatorData>;
 export const operators: Operators = iterateObect({
 	...combinationOperators,

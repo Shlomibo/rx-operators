@@ -1,7 +1,7 @@
 import { Observable, MonoTypeOperatorFunction } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { Iterable as It } from '@reactivex/ix-es2015-cjs';
-import { Key, Entry, KeyOf, ReadWrite } from './types';
+import { Entry, ReadWrite } from './types';
 
 export function debug<T>(
 	message: string,
@@ -10,11 +10,10 @@ export function debug<T>(
 	return process.env.NODE_ENV !== 'production'
 		? (obs: Observable<T>) =>
 				obs.pipe(
-					tap(value => console.log({ message, value, args })),
-					catchError<T, T>(({ err, source }) => {
-						console.error(message, err);
-						throw err;
-					})
+					tap(
+						value => console.log({ message, value, args }),
+						err => console.error(message, err)
+					)
 				)
 		: obs => obs;
 }
@@ -23,15 +22,16 @@ export function breakOn<T>(...args: any[]): MonoTypeOperatorFunction<T> {
 	return process.env.NODE_ENV !== 'production'
 		? (obs: Observable<T>) =>
 				obs.pipe(
-					tap(value => {
-						// tslint:disable-next-line:no-debugger
-						debugger;
-					}),
-					catchError<T, T>((err, source) => {
-						// tslint:disable-next-line:no-debugger
-						debugger;
-						throw err;
-					})
+					tap(
+						value => {
+							// tslint:disable-next-line:no-debugger
+							debugger;
+						},
+						ex => {
+							// tslint:disable-next-line:no-debugger
+							debugger;
+						}
+					)
 				)
 		: obs => obs;
 }

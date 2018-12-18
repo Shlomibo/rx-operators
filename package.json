@@ -6,8 +6,8 @@
 	"typings": "declarations",
 	"scripts": {
 		"build": "webpack -d --progress",
-		"watch": "npm run build -- --define process.env.NODE_ENV=\"develeopment\" --watch",
-		"release": "webpack --env production --define process.env.NODE_ENV=\"production\" --progress"
+		"watch": "npm run build -- --watch",
+		"release": "webpack --env production --progress"
 	},
 	"author": "Shlomi Borovitz",
 	"license": "ISC",
@@ -39,7 +39,6 @@
 		"ts-loader": "^5.3.1",
 		"ts-node": "^7.0.1",
 		"typescript": "^3.2.1",
-		"uglifyjs-webpack-plugin": "^2.0.1",
 		"url-loader": "^1.1.2",
 		"webpack": "^4.27.1",
 		"webpack-merge": "^4.1.4"
