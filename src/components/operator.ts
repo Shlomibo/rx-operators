@@ -2,12 +2,11 @@ import { Iterable as It } from '@reactivex/ix-es2015-cjs';
 import { combineLatest, fromEvent, merge, Observable } from 'rxjs';
 import { Component, Element } from './types';
 import { OperatorData } from '../data/operators';
-import { getParser } from '../markdown';
-import { CategoriesState, DisplaySelection } from '../state/categories';
+import { CategoriesState } from '../state/categories';
 import { operatorHandling, OperatorState } from '../state/operators';
 import { StateView } from '../state/store';
 import {
-	createSideEffect,
+	SideEffect,
 	bind,
 	lift,
 	combineSideEffects,
@@ -26,10 +25,10 @@ import {
 	first,
 	switchMap,
 	withLatestFrom,
-	skip,
 	distinctUntilChanged,
 	filter,
 } from 'rxjs/operators';
+import { debug } from '../utils';
 
 export interface OperatorDataWithName extends OperatorData {
 	name: string;
@@ -40,9 +39,6 @@ export interface Operator extends Component {
 }
 
 const SEL_DOCS_LINK = 'docs-link';
-
-const categoryNames = Object.keys(allCategories) as CategoryName[];
-const parser = getParser();
 
 export function operator(
 	root: Element,
@@ -57,12 +53,14 @@ export function operator(
 	img?: string,
 	playWithUrl?: string
 ): Operator {
-	catState = catState.pipe(share());
+	// WTF?!
+	// catState = catState.pipe(share());
 
 	const updateState = opState.createUpdater(operatorHandling);
 
 	const catDisplay = catState.pipe(map(state => state.displaySelection));
 	const activeCategories = catState.pipe(
+		debug(`op ${name} cat-sate`),
 		map(({ active }) =>
 			It.from(categories)
 				.map(
@@ -96,7 +94,7 @@ export function operator(
 			map(dispSelection => dispSelection(categories)),
 			distinctUntilChanged()
 		),
-		activeCategories,
+		activeCategories.pipe(debug(`op ${name} cat-activation`)),
 		(opState, isSearched, isCatDisplayed, catActivation) => ({
 			isCollapsed: opState.collapsed,
 			isOperatorDisplayed: isSearched,
@@ -106,6 +104,7 @@ export function operator(
 	);
 
 	const ui = state.pipe(
+		debug('operator ' + name),
 		scan<OperatorProps, [OperatorProps, Element]>(
 			([ , el ], state) => [
 				state,
@@ -127,8 +126,9 @@ export function operator(
 
 	const uiAttachment = ui.pipe(
 		first(),
+		debug(`op ${name} ui attach`),
 		map(([ , el ]) =>
-			createSideEffect((root, el) => root.append(el), root, el)
+			SideEffect.create((root, el) => root.append(el), root, el)
 		)
 	);
 
@@ -137,14 +137,14 @@ export function operator(
 		switchMap(el => fromEvent(el.find('.panel-heading'), 'click')),
 		map(ev => ev.target && jQuery(ev.target)),
 		filter(target => !!target && !target.is(`.${SEL_DOCS_LINK}`)),
-		map(el => createSideEffect(updateState, { name: 'collapse' }))
+		map(el => SideEffect.create(updateState, { name: 'collapse' }))
 	);
 
 	const uiUpdates = bind(
-		lift(state.pipe(skip(1))),
+		lift(state),
 		withLatestFrom(uiAttachment),
 		map(mixed => combineSideEffects(mixed)),
-		map(([ state, el ]) => createSideEffect(updateView, el, state))
+		map(([ state, el ]) => SideEffect.create(updateView, el, state))
 	);
 
 	return {
@@ -258,7 +258,7 @@ function operatorDisplay(
 		playWithLink.append(imgUI);
 	}
 
-	const imgChildren = !!imgUI ? [ playWithLink || imgUI ] : [];
+	// const imgChildren = !!imgUI ? [ playWithLink || imgUI ] : [];
 
 	const result = jQuery(/*html*/ `
 	<div class="operator-desc container-fluid ${selector || ''}">

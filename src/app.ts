@@ -10,7 +10,7 @@ fromEvent(document, 'DOMContentLoaded')
 	.pipe(switchMap(x => application(jQuery('body')).updates))
 	.subscribe(
 		se => {
-			se();
+			se.invoke();
 		},
 		err => console.error(err),
 		() => console.warn('backbone collapsed')

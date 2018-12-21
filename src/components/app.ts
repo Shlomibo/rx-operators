@@ -1,23 +1,26 @@
 import { fromEvent, merge, of } from 'rxjs';
-import { categories } from './categories';
-import { operators } from './operators';
 import { search } from './search';
 import { Component, Element } from './types';
 import { CategoryName } from '../data/categories';
-import { appStateStore as state, searchStore } from '../state';
+import {
+	searchStore,
+	appStateStore as state,
+	categoriesStore,
+	operatorsStore,
+} from '../state';
 import { AppState } from '../state/app';
-import { categoriesStore, operatorsStore, update } from '../state/index';
-import { createSideEffect, bind } from '../utils/side-effects';
+import { update } from '../state/index';
+import { bind } from '../utils/side-effects';
 import jQuery = require('jquery');
 import {
 	distinctUntilChanged,
-	switchMap,
-	share,
 	map,
 	withLatestFrom,
 	debounceTime,
 } from 'rxjs/operators';
-
+import { categories } from './categories';
+import { operators } from './operators';
+import { SideEffect } from '../utils/side-effects';
 export const CLS_CAT_INACTIVE = 'cat-inactive';
 
 export type DisplaySelection = (categories: CategoryName[]) => boolean;
@@ -26,7 +29,7 @@ export function application(root: Element): Component {
 	const view = createView(state.current);
 
 	const viewCreation = of(
-		createSideEffect((root, view) => root.append(view), root, view.element)
+		SideEffect.create((root, view) => root.append(view), root, view.element)
 	);
 
 	const searchComp = search(view.searchRoot);
@@ -51,7 +54,7 @@ export function application(root: Element): Component {
 		viewCreation,
 		withLatestFrom(scrolls),
 		map(([ el, isScrolled ]) =>
-			createSideEffect(update, {
+			SideEffect.create(update, {
 				name: 'setScrolled',
 				payload: isScrolled,
 			})

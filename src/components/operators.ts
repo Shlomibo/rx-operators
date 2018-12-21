@@ -3,7 +3,7 @@ import { merge, Observable, of } from 'rxjs';
 import { map, share, switchMap } from 'rxjs/operators';
 import { operator } from './operator';
 import { Component, Element } from './types';
-import { createSideEffect, bind } from '../utils/side-effects';
+import { SideEffect, bind } from '../utils/side-effects';
 import { OperatorData, operators as allOperators } from '../data/operators';
 import jQuery = require('jquery');
 import {
@@ -20,7 +20,7 @@ export function operators(
 	categories: Observable<CategoriesState>
 ): Component {
 	const uiRoot = of(
-		createSideEffect(
+		SideEffect.create(
 			(root, el) => root.append(el),
 			root,
 			jQuery(/*html*/ `<ul class="operators"></ul>`)

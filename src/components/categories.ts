@@ -1,14 +1,9 @@
 import { Iterable as It } from '@reactivex/ix-es2015-cjs';
-import { empty, merge, Observable, of } from 'rxjs';
+import { merge, Observable, of } from 'rxjs';
 import { category } from './category';
 import { Component, Element } from './types';
 import { iterateObect } from '../utils';
-import {
-	createSideEffect,
-	combineSideEffects,
-	bind,
-	lift,
-} from '../utils/side-effects';
+import { SideEffect, bind } from '../utils/side-effects';
 import { CategoryAction, update, CategoriesState } from '../state';
 import {
 	CategoryData,
@@ -19,12 +14,11 @@ import {
 import jQuery = require('jquery');
 import {
 	share,
-	withLatestFrom,
 	mergeMap,
 	map,
-	switchMap,
 	mapTo,
 	combineLatest,
+	startWith,
 } from 'rxjs/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
@@ -34,12 +28,15 @@ export function categories(
 	state: Observable<CategoriesState>
 ): Component {
 	const creation = of(
-		createSideEffect(root => {
-			const result = categoriesView();
-			root.append(result);
+		SideEffect.create(
+			(root, result) => {
+				root.append(result);
 
-			return result;
-		}, root)
+				return result;
+			},
+			root,
+			categoriesView()
+		)
 	).pipe(share());
 
 	const displayState = state.pipe(map(displayOutOfState), share());
@@ -49,7 +46,10 @@ export function categories(
 		combineLatest(displayState),
 		mergeMap(([ root, state ]) => {
 			const categories = iterateObect(state).map(([ name ]) => {
-				const catState = displayState.pipe(map(state => state[name]));
+				const catState = displayState.pipe(
+					startWith(state),
+					map(state => state[name])
+				);
 
 				return category(name, root, catState);
 			});
@@ -65,7 +65,7 @@ export function categories(
 							payload: clickedCat,
 						} as CategoryAction)
 				),
-				map(action => createSideEffect(update, action))
+				map(action => SideEffect.create(update, action))
 			);
 
 			return merge(catView, catEvents);

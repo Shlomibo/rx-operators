@@ -1,7 +1,18 @@
-import { SideEffect } from '.';
+// import { SideEffect } from '.';
 import { Observable, OperatorFunction, isObservable, of, merge } from 'rxjs';
-import { isSideEffect, suppressedKey, from, suppress } from './common';
-import { share, filter, map, switchMap } from 'rxjs/operators';
+import {
+	map,
+	mergeMap,
+	share,
+	takeUntil,
+	materialize,
+	filter,
+} from 'rxjs/operators';
+// @ts-ignore: noUnusedLocals error
+import { debug } from '..';
+
+import SideEffect, { isSideEffect } from './side-effects-class';
+import BufferingSubject from '../buffering-subject';
 
 export type MaybeSideEffect<T> = T | SideEffect<T>;
 export function bind<T>(
@@ -264,24 +275,54 @@ export function bind<T, R>(
 			return observable as any;
 		}
 
-		return operations.reduce(
-			(inputObs: Observable<SideEffect>, operation) => {
-				inputObs = inputObs.pipe(share());
+		const intermiddiate = new BufferingSubject<SideEffect<never>>();
 
-				return merge(
-					inputObs.pipe(filter(se => !se.didRun), map(suppress)),
-					inputObs.pipe(
-						filter(se => !se.metadata[suppressedKey]),
-						switchMap(se => se.completed),
-						operation,
-						map(
-							result =>
-								isSideEffect(result) ? result : from(result)
-						)
+		const processingResults = (operations.reduce(
+			(inputObs, operation) =>
+				inputObs.pipe(
+					// debug(describe('unpack', operation)),
+					mergeMap(mightBeSE => {
+						if (!isSideEffect(mightBeSE)) {
+							return of(mightBeSE);
+						}
+						else {
+							intermiddiate.next(mightBeSE.suppress());
+							return mightBeSE.completed;
+						}
+					}),
+					// debug(describe('->', operation)),
+					operation
+					// debug(describe('<-', operation))
+				),
+			observable as Observable<unknown>
+		) as Observable<SideEffect<R>>).pipe(share());
+
+		return merge(
+			intermiddiate.pipe(
+				// debug('suppressed'),
+				takeUntil(
+					processingResults.pipe(
+						materialize(),
+						filter(({ kind }) => kind === 'complete')
 					)
-				);
-			},
-			observable
-		) as Observable<SideEffect<R>>;
+				)
+			),
+			processingResults.pipe(
+				debug('pack'),
+				map(
+					result =>
+						isSideEffect(result) ? result : SideEffect.from(result)
+				)
+			)
+		);
 	}
+
+	// @ts-ignore: noUnusedLocals error
+	function describe(message: string, fn: (...args: any[]) => any): string {
+		return `${message} ${funcName(fn)}`;
+	}
+}
+
+function funcName(fn: (...args: any[]) => any): string {
+	return fn.name || fn.toString();
 }

@@ -1,5 +1,4 @@
-import JQuery = require('jquery');
-import { Observable, of, OperatorFunction, concat, merge } from 'rxjs';
+import { Observable, OperatorFunction, merge } from 'rxjs';
 import { SideEffect } from '../utils/side-effects';
 import { scan, map, share, takeWhile, skipWhile } from 'rxjs/operators';
 

@@ -2,18 +2,12 @@ import { fromEvent, merge, Observable } from 'rxjs';
 import { CLS_CAT_INACTIVE } from './app';
 import { Component, Element } from './types';
 import { CategoryName } from '../data/categories';
-import { createSideEffect } from '../utils/side-effects';
-import {
-	scan,
-	share,
-	map,
-	first,
-	skipWhile,
-	withLatestFrom,
-	filter,
-	switchMap,
-} from 'rxjs/operators';
+import { SideEffect } from '../utils/side-effects';
+import { scan, share, map, first, skipWhile, switchMap } from 'rxjs/operators';
 import jQuery = require('jquery');
+
+// @ts-ignore
+import { debug } from '../utils';
 
 export interface CategoryProps {
 	description: string;
@@ -54,14 +48,14 @@ export function category(
 	const creation = elementTracking.pipe(
 		first(({ isNew }) => isNew),
 		map(({ el }) =>
-			createSideEffect((root, el) => root.append(el), root, el!)
+			SideEffect.create((root, el) => root.append(el), root, el!)
 		)
 	);
 
 	const viewUpdates = elementTracking.pipe(
 		skipWhile(({ isNew }) => isNew),
 		map(({ el, state }) =>
-			createSideEffect(
+			SideEffect.create(
 				(el, state) => el.replaceWith(createCategoryView(name, state)),
 				el,
 				state
@@ -84,8 +78,8 @@ function createCategoryView(
 	{ description, display }: CategoryProps
 ) {
 	const result = jQuery(/*html*/ `
-	<li title="${name}" alt="${description}">
-	  class="category btn ${catgoryClassName(name)}"
+	<li title="${name}" alt="${description}"
+	  class="category btn ${catgoryClassName(name)}">
 	  ${name}
 	</li>`);
 

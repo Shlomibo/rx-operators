@@ -97,10 +97,18 @@ class KeyView<T extends object, TKey extends keyof T> extends StateView<
 	public createUpdater<TAction extends Action<string>>(
 		cb: (action: TAction, state: T[TKey]) => T[TKey] | Promise<T[TKey]>
 	): Updater<TAction> {
-		return this._parent.createUpdater<TAction>(async (action, state) => ({
-			...state,
-			[this._key]: await Promise.resolve(cb(action, state[this._key])),
-		}));
+		return this._parent.createUpdater<TAction>(async (action, state) => {
+			const newState = await Promise.resolve(
+				cb(action, state[this._key])
+			);
+
+			return Object.is(state[this._key], newState)
+				? state
+				: {
+						...state,
+						[this._key]: newState,
+					};
+		});
 	}
 }
 
@@ -120,11 +128,23 @@ export class Store<T> extends StateView<T> {
 	public createUpdater<TAction extends Action<string>>(
 		cb: (action: TAction, state: T) => T | Promise<T>
 	): Updater<TAction> {
-		return async action =>
-			action &&
-			this._store.next(
-				await Promise.resolve(cb(action, this._store.getValue()))
-			);
+		return async action => {
+			if (action) {
+				let currentState = this._store.getValue();
+				let initState: T;
+				let newState: T;
+
+				do {
+					initState = currentState;
+					newState = await Promise.resolve(cb(action, initState));
+					currentState = this._store.getValue();
+				} while (!Object.is(currentState, initState));
+
+				if (!Object.is(newState, currentState)) {
+					this._store.next(newState);
+				}
+			}
+		};
 	}
 }
 

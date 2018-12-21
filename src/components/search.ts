@@ -1,13 +1,8 @@
-import { fromEvent, merge, Observable, of } from 'rxjs';
+import { fromEvent, merge, Observable } from 'rxjs';
 import { Element, Component } from './types';
 import { searchStore, update } from '../state';
 import { SearchAction } from '../state';
-import {
-	createSideEffect,
-	SideEffect,
-	bind,
-	combineSideEffects,
-} from '../utils/side-effects';
+import { SideEffect, bind } from '../utils/side-effects';
 import {
 	debounceTime,
 	withLatestFrom,
@@ -16,7 +11,6 @@ import {
 	combineLatest,
 	switchMap,
 	share,
-	merge as mergeWith,
 } from 'rxjs/operators';
 import jQuery = require('jquery');
 
@@ -46,7 +40,7 @@ function updateSearch(
 	searches: Observable<string>
 ): Component {
 	const creation = bind(
-		createSideEffect(create, root),
+		SideEffect.create(create, root),
 		map(root => {
 			return root.find('input.search');
 		})
@@ -66,12 +60,12 @@ function updateSearch(
 			return el.val() !== search;
 		}),
 		map(([ el, search ]) =>
-			createSideEffect((searchStr, el) => el.val(searchStr), search, el)
+			SideEffect.create((searchStr, el) => el.val(searchStr), search, el)
 		)
 	);
 
 	return {
-		updates: merge(uiUpdates, searcheStateUpdates),
+		updates: merge(searcheStateUpdates, uiUpdates),
 	};
 }
 
@@ -106,6 +100,6 @@ function searchStateFromInput(
 	);
 
 	return merge(onInput, onKeydown).pipe(
-		map(action => createSideEffect(update, action))
+		map(action => SideEffect.create(update, action))
 	);
 }
