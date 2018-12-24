@@ -3,11 +3,12 @@ import { CLS_CAT_INACTIVE } from './app';
 import { Component, Element } from './types';
 import { CategoryName } from '../data/categories';
 import { SideEffect } from '../utils/side-effects';
-import { scan, share, map, first, skipWhile, switchMap } from 'rxjs/operators';
+import { scan, map, first, skipWhile, switchMap } from 'rxjs/operators';
 import jQuery = require('jquery');
 
 // @ts-ignore
 import { debug } from '../utils';
+import { share } from '../utils/rx/operators';
 
 export interface CategoryProps {
 	description: string;

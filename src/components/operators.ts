@@ -1,6 +1,6 @@
 import { Iterable as It } from '@reactivex/ix-es2015-cjs';
 import { merge, Observable, of } from 'rxjs';
-import { map, share, switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { operator } from './operator';
 import { Component, Element } from './types';
 import { SideEffect, bind } from '../utils/side-effects';
@@ -12,6 +12,7 @@ import {
 	StateView,
 	OperatorState,
 } from '../state';
+import { share } from '../utils/rx/operators';
 
 export function operators(
 	root: Element,

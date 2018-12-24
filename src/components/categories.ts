@@ -12,14 +12,8 @@ import {
 	CategoryDisplay,
 } from '../data/categories';
 import jQuery = require('jquery');
-import {
-	share,
-	mergeMap,
-	map,
-	mapTo,
-	combineLatest,
-	startWith,
-} from 'rxjs/operators';
+import { mergeMap, map, mapTo, combineLatest, startWith } from 'rxjs/operators';
+import { share } from '../utils/rx/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
 

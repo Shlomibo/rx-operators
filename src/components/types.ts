@@ -1,6 +1,7 @@
 import { Observable, OperatorFunction, merge } from 'rxjs';
 import { SideEffect } from '../utils/side-effects';
-import { scan, map, share, takeWhile, skipWhile } from 'rxjs/operators';
+import { scan, map, takeWhile, skipWhile } from 'rxjs/operators';
+import { share } from '../utils/rx/operators';
 
 export type Element = JQuery<HTMLElement>;
 

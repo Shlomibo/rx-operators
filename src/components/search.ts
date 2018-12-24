@@ -10,9 +10,9 @@ import {
 	map,
 	combineLatest,
 	switchMap,
-	share,
 } from 'rxjs/operators';
 import jQuery = require('jquery');
+import { share } from '../utils/rx/operators';
 
 export function search(root: Element): Component {
 	return updateSearch(
@@ -60,7 +60,13 @@ function updateSearch(
 			return el.val() !== search;
 		}),
 		map(([ el, search ]) =>
-			SideEffect.create((searchStr, el) => el.val(searchStr), search, el)
+			SideEffect.create(
+				{ hidden: true },
+				(searchStr: string, el: JQuery<HTMLInputElement>) =>
+					el.val(searchStr),
+				search,
+				el
+			)
 		)
 	);
 
@@ -100,6 +106,6 @@ function searchStateFromInput(
 	);
 
 	return merge(onInput, onKeydown).pipe(
-		map(action => SideEffect.create(update, action))
+		map(action => SideEffect.create({ hidden: true }, update, action))
 	);
 }

@@ -21,15 +21,26 @@ import {
 import { categories } from './categories';
 import { operators } from './operators';
 import { SideEffect } from '../utils/side-effects';
+import { debug } from '../utils';
 export const CLS_CAT_INACTIVE = 'cat-inactive';
 
 export type DisplaySelection = (categories: CategoryName[]) => boolean;
 
+const hideSEs = false;
 export function application(root: Element): Component {
+	const sesMetadata = {
+		hidden: hideSEs,
+	};
+
 	const view = createView(state.current);
 
 	const viewCreation = of(
-		SideEffect.create((root, view) => root.append(view), root, view.element)
+		SideEffect.create(
+			sesMetadata,
+			(root: Element, view: Element) => root.append(view),
+			root,
+			view.element
+		)
 	);
 
 	const searchComp = search(view.searchRoot);
@@ -52,9 +63,10 @@ export function application(root: Element): Component {
 	);
 	const uiUpdates = bind(
 		viewCreation,
+		debug('yo wassappp'),
 		withLatestFrom(scrolls),
 		map(([ el, isScrolled ]) =>
-			SideEffect.create(update, {
+			SideEffect.create(sesMetadata, update, {
 				name: 'setScrolled',
 				payload: isScrolled,
 			})

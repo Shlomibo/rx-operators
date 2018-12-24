@@ -1,18 +1,17 @@
 // import { SideEffect } from '.';
-import { Observable, OperatorFunction, isObservable, of, merge } from 'rxjs';
 import {
-	map,
-	mergeMap,
-	share,
-	takeUntil,
-	materialize,
-	filter,
-} from 'rxjs/operators';
+	Observable,
+	OperatorFunction,
+	isObservable,
+	of,
+	merge,
+	Subject,
+} from 'rxjs';
+import { map, mergeMap, finalize } from 'rxjs/operators';
 // @ts-ignore: noUnusedLocals error
 import { debug } from '..';
 
 import SideEffect, { isSideEffect } from './side-effects-class';
-import BufferingSubject from '../buffering-subject';
 
 export type MaybeSideEffect<T> = T | SideEffect<T>;
 export function bind<T>(
@@ -275,9 +274,9 @@ export function bind<T, R>(
 			return observable as any;
 		}
 
-		const intermiddiate = new BufferingSubject<SideEffect<never>>();
+		const intermiddiate = new Subject<SideEffect<never>>();
 
-		const processingResults = (operations.reduce(
+		const processingResults = operations.reduce(
 			(inputObs, operation) =>
 				inputObs.pipe(
 					// debug(describe('unpack', operation)),
@@ -286,7 +285,10 @@ export function bind<T, R>(
 							return of(mightBeSE);
 						}
 						else {
-							intermiddiate.next(mightBeSE.suppress());
+							if (!mightBeSE.didRun) {
+								intermiddiate.next(mightBeSE.suppress());
+							}
+
 							return mightBeSE.completed;
 						}
 					}),
@@ -295,24 +297,17 @@ export function bind<T, R>(
 					// debug(describe('<-', operation))
 				),
 			observable as Observable<unknown>
-		) as Observable<SideEffect<R>>).pipe(share());
+		) as Observable<SideEffect<R>>;
 
 		return merge(
-			intermiddiate.pipe(
-				// debug('suppressed'),
-				takeUntil(
-					processingResults.pipe(
-						materialize(),
-						filter(({ kind }) => kind === 'complete')
-					)
-				)
-			),
+			intermiddiate,
 			processingResults.pipe(
-				debug('pack'),
+				// debug('pack'),
 				map(
 					result =>
 						isSideEffect(result) ? result : SideEffect.from(result)
-				)
+				),
+				finalize(() => intermiddiate.complete())
 			)
 		);
 	}

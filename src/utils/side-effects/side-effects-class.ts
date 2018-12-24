@@ -4,9 +4,19 @@ import {
 	suppressedKey,
 	SideEffectTypedFunc,
 } from './common';
-import { Observable, of, empty, AsyncSubject, combineLatest } from 'rxjs';
+import {
+	Observable,
+	of,
+	empty,
+	AsyncSubject,
+	combineLatest,
+	// @ts-ignore
+	asyncScheduler,
+} from 'rxjs';
 // @ts-ignore
 import { debug } from '..';
+// @ts-ignore
+import { observeOn } from 'rxjs/operators';
 
 export function isSideEffect<T = unknown>(
 	val: unknown
@@ -47,8 +57,36 @@ abstract class SideEffectBase<T = unknown> {
 	public abstract getResult(throwIfDidnt: false): T | undefined;
 	public abstract getResult(throwIfDidnt?: true): T;
 
-	public static from<T>(value: T): SideEffectBase<T> {
-		return new PureSideEffect(value);
+	public static from<T>(
+		value: T,
+		metadata?: SideEffectMetadata
+	): SideEffectBase<T> {
+		return new PureSideEffect(value, metadata);
+	}
+
+	protected _shouldInspect(): boolean {
+		return !this.metadata.hidden;
+	}
+
+	public inspect(): void {
+		SideEffectBase._inspect(this);
+	}
+
+	protected static _inspect(
+		sideEffect: SideEffectBase,
+		args?: any[],
+		func?: (...args: any[]) => any,
+		metadata?: SideEffectMetadata
+	) {
+		if (sideEffect._shouldInspect()) {
+			console.log(
+				args || sideEffect.args,
+				sideEffect.didRun ? '[-]' : '->',
+				(func || sideEffect.sideEffectFunc).toString(),
+				metadata || sideEffect.metadata,
+				new Error().stack
+			);
+		}
 	}
 
 	public static create<T, TArgs extends any[]>(
@@ -96,7 +134,7 @@ class SuppressedSideEffect extends SideEffectBase<never> {
 	private readonly _sideEffect: SideEffectBase<unknown>;
 
 	public get didRun() {
-		return true;
+		return this._sideEffect.didRun;
 	}
 
 	public get completed() {
@@ -138,6 +176,14 @@ class SuppressedSideEffect extends SideEffectBase<never> {
 	public getResult(throwIfDidnt?: boolean): never {
 		throw new Error('Suppressed side effect!');
 	}
+
+	public inspect() {
+		SuppressedSideEffect._inspect(
+			this,
+			this._sideEffect.args,
+			this._sideEffect.sideEffectFunc
+		);
+	}
 }
 
 class PureSideEffect<T> extends SideEffectBase<T> {
@@ -146,12 +192,13 @@ class PureSideEffect<T> extends SideEffectBase<T> {
 	}
 
 	public get completed() {
-		return of(this.value);
+		return of(this.value); // .pipe(debug('pure-se'));
 	}
 
-	constructor(public readonly value: T) {
+	constructor(public readonly value: T, metadata?: SideEffectMetadata) {
 		super(
 			{
+				...metadata,
 				[pureKey]: true,
 				[suppressedKey]: false,
 			},
@@ -236,13 +283,11 @@ class SideEffect<T, TArgs extends any[]> extends SideEffectBase<T> {
 	}
 
 	public map<R>(projection: (val: T) => R) {
-		return new SideEffect<R, TArgs>(
+		return new MappedSideEffect<R, TArgs>(
 			this.metadata,
 			this.args as TArgs,
-			(...args: TArgs) => {
-				this.invoke();
-				return projection(this.getResult());
-			}
+			this,
+			projection
 		);
 	}
 
@@ -257,6 +302,51 @@ class SideEffect<T, TArgs extends any[]> extends SideEffectBase<T> {
 		}
 
 		return this[resultKey]();
+	}
+}
+
+class MappedSideEffect<T, TArgs extends any[]> extends SideEffect<T, TArgs> {
+	private readonly _originalSEFunc: (...args: TArgs) => any;
+	private readonly _projections: ((value: any) => T)[];
+
+	constructor(
+		metadata: SideEffectMetadata,
+		args: TArgs,
+		sideEffect: SideEffect<any, TArgs>,
+		projection: (value: any) => T
+	) {
+		super(metadata, args, (...args: TArgs) =>
+			projection(sideEffect.sideEffectFunc(...args))
+		);
+
+		if (sideEffect instanceof MappedSideEffect) {
+			this._originalSEFunc = sideEffect._originalSEFunc;
+			this._projections = [ ...sideEffect._projections ];
+		}
+		else {
+			this._originalSEFunc = sideEffect.sideEffectFunc;
+			this._projections = [];
+		}
+
+		this._projections.push(projection);
+	}
+
+	public inspect() {
+		MappedSideEffect._inspect(
+			this,
+			this.args,
+			this._originalSEFunc,
+			this.metadata
+		);
+
+		for (let i = this._projections.length - 1; i > 0; i--) {
+			MappedSideEffect._inspect(
+				this,
+				[ '\t|>' ],
+				this._projections[i],
+				{}
+			);
+		}
 	}
 }
 
@@ -320,5 +410,16 @@ class MergedSideEffect<T1, T2> extends SideEffectBase<[T1, T2]> {
 			(se1Args, se2Args) =>
 				projection(this.sideEffectFunc(se1Args, se2Args))
 		);
+	}
+
+	public inspect() {
+		if (this._shouldInspect()) {
+			console.log('merge->>');
+
+			this._se1.inspect();
+			this._se2.inspect();
+
+			console.log('<<-merge');
+		}
 	}
 }

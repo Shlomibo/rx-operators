@@ -21,14 +21,15 @@ import jQuery = require('jquery');
 import {
 	scan,
 	map,
-	share,
 	first,
 	switchMap,
 	withLatestFrom,
 	distinctUntilChanged,
 	filter,
 } from 'rxjs/operators';
+// @ts-ignore
 import { debug } from '../utils';
+import { share } from '../utils/rx/operators';
 
 export interface OperatorDataWithName extends OperatorData {
 	name: string;
@@ -54,13 +55,13 @@ export function operator(
 	playWithUrl?: string
 ): Operator {
 	// WTF?!
-	// catState = catState.pipe(share());
+	catState = catState.pipe(share());
 
 	const updateState = opState.createUpdater(operatorHandling);
 
 	const catDisplay = catState.pipe(map(state => state.displaySelection));
 	const activeCategories = catState.pipe(
-		debug(`op ${name} cat-sate`),
+		// debug(`op ${name} cat-sate`),
 		map(({ active }) =>
 			It.from(categories)
 				.map(
@@ -94,7 +95,7 @@ export function operator(
 			map(dispSelection => dispSelection(categories)),
 			distinctUntilChanged()
 		),
-		activeCategories.pipe(debug(`op ${name} cat-activation`)),
+		activeCategories, // .pipe(debug(`op ${name} cat-activation`)),
 		(opState, isSearched, isCatDisplayed, catActivation) => ({
 			isCollapsed: opState.collapsed,
 			isOperatorDisplayed: isSearched,
@@ -104,7 +105,7 @@ export function operator(
 	);
 
 	const ui = state.pipe(
-		debug('operator ' + name),
+		// debug('operator ' + name),
 		scan<OperatorProps, [OperatorProps, Element]>(
 			([ , el ], state) => [
 				state,
@@ -126,10 +127,10 @@ export function operator(
 
 	const uiAttachment = ui.pipe(
 		first(),
-		debug(`op ${name} ui attach`),
 		map(([ , el ]) =>
 			SideEffect.create((root, el) => root.append(el), root, el)
 		)
+		// debug(`op ${name} ui attach`)
 	);
 
 	const stateUpdates = bind(
