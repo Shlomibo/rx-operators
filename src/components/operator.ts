@@ -1,5 +1,11 @@
 import { Iterable as It } from '@reactivex/ix-es2015-cjs';
-import { combineLatest, fromEvent, merge, Observable } from 'rxjs';
+import {
+	combineLatest,
+	fromEvent,
+	merge,
+	Observable,
+	ConnectableObservable,
+} from 'rxjs';
 import { Component, Element } from './types';
 import { OperatorData } from '../data/operators';
 import { CategoriesState } from '../state/categories';
@@ -29,7 +35,7 @@ import {
 } from 'rxjs/operators';
 // @ts-ignore
 import { debug } from '../utils';
-import { share } from '../utils/rx/operators';
+import { subscribeWith, publishFastReplay } from '../utils/rx/operators';
 
 export interface OperatorDataWithName extends OperatorData {
 	name: string;
@@ -55,7 +61,7 @@ export function operator(
 	playWithUrl?: string
 ): Operator {
 	// WTF?!
-	catState = catState.pipe(share());
+	catState = catState;
 
 	const updateState = opState.createUpdater(operatorHandling);
 
@@ -79,58 +85,67 @@ export function operator(
 		)
 	);
 
-	const state: Observable<
-		OperatorProps
-	> = combineLatest(
-		opState.state,
-		search.pipe(
-			map(
-				searchStr =>
-					!searchStr ||
-					name.toLowerCase().includes(searchStr.toLowerCase())
+	const state: ConnectableObservable<OperatorProps> = publishFastReplay(
+		combineLatest(
+			opState.state,
+			search.pipe(
+				map(
+					searchStr =>
+						!searchStr ||
+						name.toLowerCase().includes(searchStr.toLowerCase())
+				),
+				distinctUntilChanged()
 			),
-			distinctUntilChanged()
-		),
-		catDisplay.pipe(
-			map(dispSelection => dispSelection(categories)),
-			distinctUntilChanged()
-		),
-		activeCategories, // .pipe(debug(`op ${name} cat-activation`)),
-		(opState, isSearched, isCatDisplayed, catActivation) => ({
-			isCollapsed: opState.collapsed,
-			isOperatorDisplayed: isSearched,
-			isCategoryDisplayed: isCatDisplayed,
-			categories: catActivation,
-		})
+			catDisplay.pipe(
+				map(dispSelection => dispSelection(categories)),
+				distinctUntilChanged()
+			),
+			activeCategories, // .pipe(debug(`op ${name} cat-activation`)),
+			(opState, isSearched, isCatDisplayed, catActivation) => ({
+				isCollapsed: opState.collapsed,
+				isOperatorDisplayed: isSearched,
+				isCategoryDisplayed: isCatDisplayed,
+				categories: catActivation,
+			})
+		)
 	);
 
-	const ui = state.pipe(
-		// debug('operator ' + name),
-		scan<OperatorProps, [OperatorProps, Element]>(
-			([ , el ], state) => [
-				state,
-				el ||
-					createOperatorView(
-						id,
-						name,
-						url,
-						description,
-						img,
-						playWithUrl,
-						state
-					),
-			],
-			[ , ] as any
-		),
-		share()
+	const ui = publishFastReplay(
+		state.pipe(
+			// debug('operator ' + name),
+			scan<OperatorProps, [OperatorProps, Element]>(
+				([ , el ], state) => [
+					state,
+					el ||
+						createOperatorView(
+							id,
+							name,
+							url,
+							description,
+							img,
+							playWithUrl,
+							state
+						),
+				],
+				[ , ] as any
+			),
+			map(([ , el ]) => el)
+		)
 	);
 
 	const uiAttachment = ui.pipe(
 		first(),
-		map(([ , el ]) =>
-			SideEffect.create((root, el) => root.append(el), root, el)
-		)
-		// debug(`op ${name} ui attach`)
+		map(el =>
+			SideEffect.create(
+				(root, el) => {
+					root.append(el);
+					return el;
+				},
+				root,
+				el
+			)
+		),
+		debug('op-attach-' + name)
 	);
 
 	const stateUpdates = bind(
@@ -143,14 +158,14 @@ export function operator(
 
 	const uiUpdates = bind(
 		lift(state),
-		withLatestFrom(uiAttachment),
+		withLatestFrom(ui),
 		map(mixed => combineSideEffects(mixed)),
 		map(([ state, el ]) => SideEffect.create(updateView, el, state))
 	);
 
 	return {
 		name,
-		updates: merge(uiUpdates, stateUpdates),
+		updates: merge(uiUpdates, stateUpdates).pipe(subscribeWith(state, ui)),
 	};
 }
 

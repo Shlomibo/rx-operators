@@ -68,12 +68,13 @@ abstract class SideEffectBase<T = unknown> {
 		return !this.metadata.hidden;
 	}
 
-	public inspect(): void {
-		SideEffectBase._inspect(this);
+	public inspect(printStack?: boolean): void {
+		SideEffectBase._inspect(this, printStack);
 	}
 
 	protected static _inspect(
 		sideEffect: SideEffectBase,
+		printStack?: boolean,
 		args?: any[],
 		func?: (...args: any[]) => any,
 		metadata?: SideEffectMetadata
@@ -84,7 +85,7 @@ abstract class SideEffectBase<T = unknown> {
 				sideEffect.didRun ? '[-]' : '->',
 				(func || sideEffect.sideEffectFunc).toString(),
 				metadata || sideEffect.metadata,
-				new Error().stack
+				printStack ? new Error().stack : ''
 			);
 		}
 	}
@@ -177,12 +178,8 @@ class SuppressedSideEffect extends SideEffectBase<never> {
 		throw new Error('Suppressed side effect!');
 	}
 
-	public inspect() {
-		SuppressedSideEffect._inspect(
-			this,
-			this._sideEffect.args,
-			this._sideEffect.sideEffectFunc
-		);
+	public inspect(printStack?: boolean) {
+		this._sideEffect.inspect(printStack);
 	}
 }
 
@@ -192,7 +189,7 @@ class PureSideEffect<T> extends SideEffectBase<T> {
 	}
 
 	public get completed() {
-		return of(this.value); // .pipe(debug('pure-se'));
+		return of(this.value);
 	}
 
 	constructor(public readonly value: T, metadata?: SideEffectMetadata) {
@@ -235,7 +232,7 @@ class SideEffect<T, TArgs extends any[]> extends SideEffectBase<T> {
 	}
 
 	public get completed() {
-		return this[completionKey].asObservable(); // .pipe(debug('se-completion'));
+		return this[completionKey].asObservable();
 	}
 
 	constructor(
@@ -331,9 +328,10 @@ class MappedSideEffect<T, TArgs extends any[]> extends SideEffect<T, TArgs> {
 		this._projections.push(projection);
 	}
 
-	public inspect() {
+	public inspect(printStack?: boolean) {
 		MappedSideEffect._inspect(
 			this,
+			printStack,
 			this.args,
 			this._originalSEFunc,
 			this.metadata
@@ -342,6 +340,7 @@ class MappedSideEffect<T, TArgs extends any[]> extends SideEffect<T, TArgs> {
 		for (let i = this._projections.length - 1; i > 0; i--) {
 			MappedSideEffect._inspect(
 				this,
+				printStack,
 				[ '\t|>' ],
 				this._projections[i],
 				{}
@@ -412,12 +411,12 @@ class MergedSideEffect<T1, T2> extends SideEffectBase<[T1, T2]> {
 		);
 	}
 
-	public inspect() {
+	public inspect(printStack?: boolean) {
 		if (this._shouldInspect()) {
 			console.log('merge->>');
 
-			this._se1.inspect();
-			this._se2.inspect();
+			this._se1.inspect(printStack);
+			this._se2.inspect(printStack);
 
 			console.log('<<-merge');
 		}

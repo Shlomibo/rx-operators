@@ -12,7 +12,10 @@ import {
 	StateView,
 	OperatorState,
 } from '../state';
+// @ts-ignore
 import { share } from '../utils/rx/operators';
+// @ts-ignore
+import { debug } from '../utils';
 
 export function operators(
 	root: Element,
@@ -22,11 +25,14 @@ export function operators(
 ): Component {
 	const uiRoot = of(
 		SideEffect.create(
-			(root, el) => root.append(el),
+			(root, el) => {
+				root.append(el);
+				return el;
+			},
 			root,
 			jQuery(/*html*/ `<ul class="operators"></ul>`)
 		)
-	).pipe(share());
+	);
 
 	const opNames = It.from(Object.keys(operators.current));
 

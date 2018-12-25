@@ -12,7 +12,7 @@ import {
 	switchMap,
 } from 'rxjs/operators';
 import jQuery = require('jquery');
-import { share } from '../utils/rx/operators';
+import { publishFastReplay, subscribeWith } from '../utils/rx/operators';
 
 export function search(root: Element): Component {
 	return updateSearch(
@@ -39,12 +39,14 @@ function updateSearch(
 	root: JQuery<HTMLElement>,
 	searches: Observable<string>
 ): Component {
-	const creation = bind(
-		SideEffect.create(create, root),
-		map(root => {
-			return root.find('input.search');
-		})
-	).pipe(share());
+	const creation = publishFastReplay(
+		bind(
+			SideEffect.create(create, root),
+			map(root => {
+				return root.find('input.search');
+			})
+		)
+	);
 
 	const searcheStateUpdates = bind(
 		creation,
@@ -71,7 +73,9 @@ function updateSearch(
 	);
 
 	return {
-		updates: merge(searcheStateUpdates, uiUpdates),
+		updates: merge(searcheStateUpdates, uiUpdates).pipe(
+			subscribeWith(creation)
+		),
 	};
 }
 

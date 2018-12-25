@@ -13,7 +13,7 @@ import {
 } from '../data/categories';
 import jQuery = require('jquery');
 import { mergeMap, map, mapTo, combineLatest, startWith } from 'rxjs/operators';
-import { share } from '../utils/rx/operators';
+import { publishFastReplay, subscribeWith } from '../utils/rx/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
 
@@ -31,9 +31,9 @@ export function categories(
 			root,
 			categoriesView()
 		)
-	).pipe(share());
+	);
 
-	const displayState = state.pipe(map(displayOutOfState), share());
+	const displayState = publishFastReplay(state.pipe(map(displayOutOfState)));
 
 	const categoriesHandling = bind(
 		creation,
@@ -67,7 +67,7 @@ export function categories(
 	);
 
 	return {
-		updates: categoriesHandling,
+		updates: categoriesHandling.pipe(subscribeWith(displayState)),
 	};
 }
 

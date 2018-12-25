@@ -8,7 +8,7 @@ import jQuery = require('jquery');
 
 // @ts-ignore
 import { debug } from '../utils';
-import { share } from '../utils/rx/operators';
+import { publishFastReplay, subscribeWith } from '../utils/rx/operators';
 
 export interface CategoryProps {
 	description: string;
@@ -31,19 +31,20 @@ export function category(
 	root: Element,
 	catData: Observable<CategoryProps>
 ): Category {
-	const elementTracking = catData.pipe(
-		scan<CategoryProps, ViewState>(
-			({ el }, state) =>
-				!!el
-					? { isNew: false, el, state }
-					: {
-							isNew: true,
-							el: createCategoryView(name, state),
-							state,
-						},
-			({} as any) as ViewState
-		),
-		share()
+	const elementTracking = publishFastReplay(
+		catData.pipe(
+			scan<CategoryProps, ViewState>(
+				({ el }, state) =>
+					!!el
+						? { isNew: false, el, state }
+						: {
+								isNew: true,
+								el: createCategoryView(name, state),
+								state,
+							},
+				({} as any) as ViewState
+			)
+		)
 	);
 
 	const creation = elementTracking.pipe(
@@ -66,7 +67,9 @@ export function category(
 
 	return {
 		name,
-		updates: merge(creation, viewUpdates),
+		updates: merge(creation, viewUpdates).pipe(
+			subscribeWith(elementTracking)
+		),
 		clicks: creation.pipe(
 			switchMap(se => se.completed),
 			switchMap(el => fromEvent(el, 'click'))

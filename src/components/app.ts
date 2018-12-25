@@ -21,6 +21,7 @@ import {
 import { categories } from './categories';
 import { operators } from './operators';
 import { SideEffect } from '../utils/side-effects';
+// @ts-ignore
 import { debug } from '../utils';
 export const CLS_CAT_INACTIVE = 'cat-inactive';
 
@@ -63,7 +64,6 @@ export function application(root: Element): Component {
 	);
 	const uiUpdates = bind(
 		viewCreation,
-		debug('yo wassappp'),
 		withLatestFrom(scrolls),
 		map(([ el, isScrolled ]) =>
 			SideEffect.create(sesMetadata, update, {
