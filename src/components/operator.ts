@@ -1,5 +1,11 @@
 import { Iterable as It } from '@reactivex/ix-es2015-cjs';
-import { combineLatest, fromEvent, merge, Observable } from 'rxjs';
+import {
+	combineLatest,
+	fromEvent,
+	merge,
+	Observable,
+	ConnectableObservable,
+} from 'rxjs';
 import { Component, Element } from './types';
 import { OperatorData } from '../data/operators';
 import { CategoriesState } from '../state/categories';
@@ -79,29 +85,29 @@ export function operator(
 		)
 	);
 
-	const state: Observable<
-		OperatorProps
-	> = combineLatest(
-		opState.state,
-		search.pipe(
-			map(
-				searchStr =>
-					!searchStr ||
-					name.toLowerCase().includes(searchStr.toLowerCase())
+	const state: ConnectableObservable<OperatorProps> = publishFastReplay(
+		combineLatest(
+			opState.state,
+			search.pipe(
+				map(
+					searchStr =>
+						!searchStr ||
+						name.toLowerCase().includes(searchStr.toLowerCase())
+				),
+				distinctUntilChanged()
 			),
-			distinctUntilChanged()
-		),
-		catDisplay.pipe(
-			map(dispSelection => dispSelection(categories)),
-			distinctUntilChanged()
-		),
-		activeCategories, // .pipe(debug(`op ${name} cat-activation`)),
-		(opState, isSearched, isCatDisplayed, catActivation) => ({
-			isCollapsed: opState.collapsed,
-			isOperatorDisplayed: isSearched,
-			isCategoryDisplayed: isCatDisplayed,
-			categories: catActivation,
-		})
+			catDisplay.pipe(
+				map(dispSelection => dispSelection(categories)),
+				distinctUntilChanged()
+			),
+			activeCategories, // .pipe(debug(`op ${name} cat-activation`)),
+			(opState, isSearched, isCatDisplayed, catActivation) => ({
+				isCollapsed: opState.collapsed,
+				isOperatorDisplayed: isSearched,
+				isCategoryDisplayed: isCatDisplayed,
+				categories: catActivation,
+			})
+		)
 	);
 
 	const ui = publishFastReplay(
@@ -138,7 +144,8 @@ export function operator(
 				root,
 				el
 			)
-		)
+		),
+		debug('op-attach-' + name)
 	);
 
 	const stateUpdates = bind(
@@ -158,7 +165,7 @@ export function operator(
 
 	return {
 		name,
-		updates: merge(uiUpdates, stateUpdates).pipe(subscribeWith(ui)),
+		updates: merge(uiUpdates, stateUpdates).pipe(subscribeWith(state, ui)),
 	};
 }
 
@@ -202,10 +209,10 @@ function createOperatorView(
 	const result = jQuery(/*html*/ `
 	<li id="${id}" class="operator panel panel-default">
 	  <div class="panel-heading container-fluid">
-		<div class="col col-lg-5">
+		<div class="col-sm-6 col-lg-5">
 			<ul class="categories"></ul>
 		</div>
-		<h3 class="col col-lg-7">
+		<h3 class="col-sm-6 col-lg-7">
 		  <a class="${SEL_DOCS_LINK}" href="${url} target="_blank">
 		    <code>${name}</code>
 		  </a>
@@ -254,7 +261,7 @@ function operatorDisplay(
 	const imgUI =
 		imgSource &&
 		jQuery(
-			/*html*/ `<img class="col-6 image-rounded" src="./img/${imgSource}" />`
+			/*html*/ `<img class="col-sm-6 image-rounded" src="./img/${imgSource}" />`
 		);
 
 	const playWithLink =
@@ -271,7 +278,7 @@ function operatorDisplay(
 
 	const result = jQuery(/*html*/ `
 	<div class="operator-desc container-fluid ${selector || ''}">
-	  <div class="col-${descColCount}">${html || ''}</div>
+	  <div class="col-sm-${descColCount}">${html || ''}</div>
 	</div>`);
 
 	if (playWithLink || imgUI) {

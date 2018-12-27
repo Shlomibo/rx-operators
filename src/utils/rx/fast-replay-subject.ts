@@ -69,10 +69,6 @@ export function fastReplaySubjectMixin<
 		}
 
 		public next(value: T) {
-			if (this.closed) {
-				throw new ObjectUnsubscribedError();
-			}
-
 			const last: LinkedList<T> = { value };
 
 			if (this._lastEmission && this._emissions) {

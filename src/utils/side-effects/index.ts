@@ -9,7 +9,7 @@ export { isSideEffect } from './side-effects-class';
 
 // tslint:disable-next-line:variable-name
 export const SideEffect = SideEffectBase;
-export type SideEffect<T = unknown> = SideEffectBase<T>;
+export type SideEffect = SideEffectBase;
 
 export function lift<T>(
 	observable: Observable<T>

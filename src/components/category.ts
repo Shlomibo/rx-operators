@@ -2,22 +2,13 @@ import { fromEvent, merge, Observable } from 'rxjs';
 import { CLS_CAT_INACTIVE } from './app';
 import { Component, Element } from './types';
 import { CategoryName } from '../data/categories';
-import { SideEffect, bind } from '../utils/side-effects';
-import {
-	scan,
-	map,
-	first,
-	skipWhile,
-	switchMap,
-	refCount,
-	multicast,
-} from 'rxjs/operators';
+import { SideEffect } from '../utils/side-effects';
+import { scan, map, first, skipWhile, switchMap } from 'rxjs/operators';
 import jQuery = require('jquery');
 
 // @ts-ignore
 import { debug } from '../utils';
 import { publishFastReplay, subscribeWith } from '../utils/rx/operators';
-import { FastReplaySubject } from '../utils/rx/fast-replay-subject';
 
 export interface CategoryProps {
 	description: string;
@@ -32,7 +23,7 @@ interface ViewState {
 
 export interface Category extends Component {
 	name: CategoryName;
-	clicks: Observable<SideEffect<Observable<unknown>>>;
+	clicks: Observable<unknown>;
 }
 
 export function category(
@@ -56,12 +47,10 @@ export function category(
 		)
 	);
 
-	const creation = publishFastReplay(
-		elementTracking.pipe(
-			first(({ isNew }) => isNew),
-			map(({ el }) =>
-				SideEffect.create((root, el) => root.append(el), root, el!)
-			)
+	const creation = elementTracking.pipe(
+		first(({ isNew }) => isNew),
+		map(({ el }) =>
+			SideEffect.create((root, el) => root.append(el), root, el!)
 		)
 	);
 
@@ -79,9 +68,12 @@ export function category(
 	return {
 		name,
 		updates: merge(creation, viewUpdates).pipe(
-			subscribeWith(elementTracking, creation)
+			subscribeWith(elementTracking)
 		),
-		clicks: bind(creation, debug('c0'), map(el => fromEvent(el, 'click'))),
+		clicks: creation.pipe(
+			switchMap(se => se.completed),
+			switchMap(el => fromEvent(el, 'click'))
+		),
 	};
 }
 

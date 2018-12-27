@@ -2,7 +2,7 @@ import { Iterable as It } from '@reactivex/ix-es2015-cjs';
 import { merge, Observable, of } from 'rxjs';
 import { category } from './category';
 import { Component, Element } from './types';
-import { iterateObect, debug } from '../utils';
+import { iterateObect } from '../utils';
 import { SideEffect, bind } from '../utils/side-effects';
 import { CategoryAction, update, CategoriesState } from '../state';
 import {
@@ -12,15 +12,7 @@ import {
 	CategoryDisplay,
 } from '../data/categories';
 import jQuery = require('jquery');
-import {
-	mergeMap,
-	map,
-	mapTo,
-	combineLatest,
-	startWith,
-	switchMap,
-	switchAll,
-} from 'rxjs/operators';
+import { mergeMap, map, mapTo, combineLatest, startWith } from 'rxjs/operators';
 import { publishFastReplay, subscribeWith } from '../utils/rx/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
@@ -43,8 +35,6 @@ export function categories(
 
 	const displayState = publishFastReplay(state.pipe(map(displayOutOfState)));
 
-	// Change to start with current state instead of this
-
 	const categoriesHandling = bind(
 		creation,
 		combineLatest(displayState),
@@ -59,19 +49,9 @@ export function categories(
 			});
 
 			const catView = merge(...categories.map(cat => cat.updates));
-			const catEvents = bind(
-				merge(
-					...categories.map(cat =>
-						bind(
-							cat.clicks,
-							debug('c1'),
-							switchAll(),
-							debug('c2'),
-							mapTo(cat.name)
-						)
-					)
-				),
-				debug('c3'),
+			const catEvents = merge(
+				...categories.map(cat => cat.clicks.pipe(mapTo(cat.name)))
+			).pipe(
 				map(
 					clickedCat =>
 						({
@@ -82,7 +62,7 @@ export function categories(
 				map(action => SideEffect.create(update, action))
 			);
 
-			return merge(catEvents, catView);
+			return merge(catView, catEvents);
 		})
 	);
 

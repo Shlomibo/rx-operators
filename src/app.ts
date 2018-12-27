@@ -5,7 +5,6 @@ import { switchMap } from 'rxjs/operators';
 import { application } from './components/app';
 import '../style/style.less';
 import jQuery = require('jquery');
-// import 'bootstrap/dist/css/bootstrap.min.css';
 
 fromEvent(document, 'DOMContentLoaded')
 	.pipe(switchMap(x => application(jQuery('body')).updates))
