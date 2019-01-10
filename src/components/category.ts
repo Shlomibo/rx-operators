@@ -31,26 +31,26 @@ export function category(
 	root: Element,
 	catData: Observable<CategoryProps>
 ): Category {
-	const elementTracking = publishFastReplay(
-		catData.pipe(
-			scan<CategoryProps, ViewState>(
-				({ el }, state) =>
-					!!el
-						? { isNew: false, el, state }
-						: {
-								isNew: true,
-								el: createCategoryView(name, state),
-								state,
-							},
-				({} as any) as ViewState
-			)
+	const elementTracking = catData.pipe(
+		scan<CategoryProps, ViewState>(
+			({ el }, state) =>
+				!!el
+					? { isNew: false, el, state }
+					: {
+							isNew: true,
+							el: createCategoryView(name, state),
+							state,
+						},
+			({} as any) as ViewState
 		)
 	);
 
-	const creation = elementTracking.pipe(
-		first(({ isNew }) => isNew),
-		map(({ el }) =>
-			SideEffect.create((root, el) => root.append(el), root, el!)
+	const creation = publishFastReplay(
+		elementTracking.pipe(
+			first(({ isNew }) => isNew),
+			map(({ el }) =>
+				SideEffect.create((root, el) => root.append(el), root, el!)
+			)
 		)
 	);
 
@@ -67,9 +67,7 @@ export function category(
 
 	return {
 		name,
-		updates: merge(creation, viewUpdates).pipe(
-			subscribeWith(elementTracking)
-		),
+		updates: merge(creation, viewUpdates).pipe(subscribeWith(creation)),
 		clicks: creation.pipe(
 			switchMap(se => se.completed),
 			switchMap(el => fromEvent(el, 'click'))

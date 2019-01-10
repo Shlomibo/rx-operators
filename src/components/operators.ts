@@ -57,7 +57,10 @@ export function operators(
 						opData.categories,
 						opState,
 						search,
-						categories
+						categories,
+						opData.description,
+						opData.img,
+						opData.playWithUrl
 					)
 				)
 			)

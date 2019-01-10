@@ -12,7 +12,7 @@ import {
 	CategoryDisplay,
 } from '../data/categories';
 import jQuery = require('jquery');
-import { mergeMap, map, mapTo, combineLatest, startWith } from 'rxjs/operators';
+import { mergeMap, map, combineLatest, startWith } from 'rxjs/operators';
 import { publishFastReplay, subscribeWith } from '../utils/rx/operators';
 
 export type DataWithDisplay = CategoryData & { display: boolean };
@@ -39,30 +39,34 @@ export function categories(
 		creation,
 		combineLatest(displayState),
 		mergeMap(([ root, state ]) => {
-			const categories = iterateObect(state).map(([ name ]) => {
-				const catState = displayState.pipe(
-					startWith(state),
-					map(state => state[name])
-				);
+			const categories = iterateObect(state)
+				.map(([ name ]) => {
+					const catState = displayState.pipe(
+						startWith(state),
+						map(state => state[name])
+					);
 
-				return category(name, root, catState);
-			});
+					return category(name, root, catState);
+				})
+				.toArray();
 
 			const catView = merge(...categories.map(cat => cat.updates));
 			const catEvents = merge(
-				...categories.map(cat => cat.clicks.pipe(mapTo(cat.name)))
-			).pipe(
-				map(
-					clickedCat =>
-						({
-							name: 'categoryClicked',
-							payload: clickedCat,
-						} as CategoryAction)
-				),
-				map(action => SideEffect.create(update, action))
+				...categories.map(cat =>
+					cat.clicks.pipe(
+						map(
+							_ =>
+								({
+									name: 'categoryClicked',
+									payload: cat.name,
+								} as CategoryAction)
+						),
+						map(action => SideEffect.create(update, action))
+					)
+				)
 			);
 
-			return merge(catView, catEvents);
+			return merge(catEvents, catView);
 		})
 	);
 
